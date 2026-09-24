@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampGroove — College Event Tickets</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT:'#7c3aed', dark:'#5b21b6', light:'#ede9fe' },
+            accent: '#f59e0b'
+          },
+          fontFamily: { sans:['-apple-system','Segoe UI','system-ui','sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    *{box-sizing:border-box}
+    .hero-gradient{background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 50%,#0ea5e9 100%)}
+    .card-hover{transition:transform .2s,box-shadow .2s}
+    .card-hover:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(124,58,237,.18)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .fade-in{animation:fadeIn .3s ease both}
+    @keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    .pop-in{animation:popIn .25s ease both}
+    .toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+    .toast{padding:.8rem 1.25rem;border-radius:.75rem;font-size:.88rem;font-weight:600;color:#fff;pointer-events:auto;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.22);animation:fadeIn .3s ease both}
+    .toast.success{background:#16a34a}
+    .toast.error{background:#dc2626}
+    .toast.info{background:#2563eb}
+    .field-error{font-size:.73rem;color:#dc2626;margin-top:.25rem;display:none}
+    input.invalid,select.invalid{border-color:#dc2626!important;box-shadow:0 0 0 2px #fecaca}
+    input.valid{border-color:#16a34a!important}
+    .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+    .tag-music{background:#fce7f3;color:#be185d}
+    .tag-sports{background:#dcfce7;color:#15803d}
+    .tag-academic{background:#dbeafe;color:#1d4ed8}
+    .tag-arts{background:#fef9c3;color:#a16207}
+    .tag-tech{background:#ede9fe;color:#6d28d9}
+    .tag-social{background:#ffedd5;color:#c2410c}
+    .pill{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.75rem;font-weight:700}
+    .status-published{background:#dcfce7;color:#15803d}
+    .status-draft{background:#f3f4f6;color:#4b5563}
+    .status-cancelled{background:#fee2e2;color:#b91c1c}
+    .nav-link{font-size:.88rem;font-weight:600;color:#6b7280;cursor:pointer;transition:color .15s;padding:.35rem .5rem;border-radius:.4rem}
+    .nav-link:hover,.nav-link.active{color:#7c3aed;background:#ede9fe}
+    .admin-table{width:100%;border-collapse:collapse;font-size:.82rem}
+    .admin-table th{background:#f5f3ff;color:#5b21b6;padding:.6rem .85rem;text-align:left;font-weight:700;border-bottom:2px solid #ddd6fe}
+    .admin-table td{padding:.55rem .85rem;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+    .admin-table tr:hover td{background:#faf9ff}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-thumb{background:#c4b5fd;border-radius:3px}
+    .input-base{width:100%;border:1.5px solid #d1d5db;border-radius:.6rem;padding:.6rem 1rem;font-size:.88rem;outline:none;transition:border-color .15s,box-shadow .15s;background:#fff}
+    .input-base:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+    .btn-primary{background:#7c3aed;color:#fff;font-weight:700;padding:.65rem 1.4rem;border-radius:.6rem;border:none;cursor:pointer;transition:background .15s,transform .1s;font-size:.9rem}
+    .btn-primary:hover{background:#5b21b6}
+    .btn-primary:active{transform:scale(.97)}
+    .btn-secondary{background:#f3f0ff;color:#7c3aed;font-weight:700;padding:.6rem 1.2rem;border-radius:.6rem;border:1.5px solid #ddd6fe;cursor:pointer;transition:background .15s;font-size:.88rem}
+    .btn-secondary:hover{background:#ede9fe}
+    .btn-danger{background:#fee2e2;color:#b91c1c;font-weight:700;padding:.5rem 1rem;border-radius:.5rem;border:none;cursor:pointer;font-size:.8rem;transition:background .15s}
+    .btn-danger:hover{background:#fecaca}
+    .btn-warn{background:#fef3c7;color:#92400e;font-weight:700;padding:.5rem 1rem;border-radius:.5rem;border:none;cursor:pointer;font-size:.8rem;transition:background .15s}
+    .btn-warn:hover{background:#fde68a}
+    .btn-sm{padding:.35rem .8rem;font-size:.78rem;border-radius:.4rem;border:none;cursor:pointer;font-weight:600}
+    .section-hidden{display:none}
+    .tab-btn{padding:.5rem 1.1rem;border-radius:.5rem;font-size:.83rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:#6b7280;transition:all .15s}
+    .tab-btn.active{background:#7c3aed;color:#fff}
+    /* QR bars visual */
+    .qr-wrap{background:#fff;padding:10px;border-radius:8px;display:inline-block;border:2px solid #e5e7eb}
+    /* Purchase modal steps */
+    .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;transition:all .2s}
+    .step-dot.done{background:#16a34a;color:#fff}
+    .step-dot.active{background:#7c3aed;color:#fff;box-shadow:0 0 0 4px rgba(124,58,237,.2)}
+    .step-dot.pending{background:#e5e7eb;color:#9ca3af}
+    .step-line{flex:1;height:2px;background:#e5e7eb;transition:background .3s}
+    .step-line.done{background:#16a34a}
+    .qty-btn{width:34px;height:34px;border-radius:.5rem;border:1.5px solid #d1d5db;background:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151;transition:all .15s;flex-shrink:0}
+    .qty-btn:hover:not(:disabled){background:#f3f0ff;border-color:#7c3aed;color:#7c3aed}
+    .qty-btn:disabled{opacity:.35;cursor:not-allowed}
+    .pay-method{border:2px solid #e5e7eb;border-radius:.75rem;padding:1rem;cursor:pointer;transition:all .15s;text-align:left}
+    .pay-method:hover{border-color:#c4b5fd;background:#faf9ff}
+    .pay-method.selected{border-color:#7c3aed;background:#f5f3ff}
+    .pay-method input[type=radio]{accent-color:#7c3aed}
+    /* card input row */
+    .card-num{letter-spacing:.15em;font-family:monospace}
+    /* ─── TICKET TEMPLATE ─── */
+    .ticket-shell{background:#fff;border-radius:1rem;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12);font-family:-apple-system,'Segoe UI',system-ui,sans-serif;max-width:480px;margin:0 auto;border:1px solid #e5e7eb}
+    .ticket-header{padding:1.25rem 1.5rem;color:#fff;position:relative;overflow:hidden}
+    .ticket-header::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12)}
+    .ticket-header::after{content:'';position:absolute;bottom:-30px;left:30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08)}
+    .ticket-tear{display:flex;align-items:center;position:relative;background:#f9fafb}
+    .ticket-tear::before{content:'';width:20px;height:20px;border-radius:50%;background:#f3f4f6;border:2px solid #e5e7eb;flex-shrink:0;margin-left:-10px}
+    .ticket-tear::after{content:'';width:20px;height:20px;border-radius:50%;background:#f3f4f6;border:2px solid #e5e7eb;flex-shrink:0;margin-right:-10px}
+    .tear-line{flex:1;border-top:2px dashed #d1d5db;margin:0 4px}
+    .ticket-body{padding:1.25rem 1.5rem;background:#fff}
+    .ticket-footer{padding:.85rem 1.5rem;background:#f9fafb;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .ticket-field{margin-bottom:.75rem}
+    .ticket-field label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;font-weight:700;display:block;margin-bottom:.2rem}
+    .ticket-field span{font-size:.9rem;font-weight:600;color:#1f2328}
+    .ticket-hash{font-family:monospace;font-size:.72rem;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;letter-spacing:.05em}
+    /* ─── SLIDE-OVER DRAWER ─── */
+    .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;opacity:0;pointer-events:none;transition:opacity .3s}
+    .drawer-overlay.open{opacity:1;pointer-events:auto}
+    .drawer-panel{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:420px;background:#fff;z-index:61;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.18)}
+    .drawer-panel.open{transform:translateX(0)}
+    @media(max-width:480px){.drawer-panel{max-width:100%}}
+    /* Drawer ticket card */
+    .dtk-card{border-radius:.85rem;overflow:hidden;border:1.5px solid #e5e7eb;background:#fff;transition:box-shadow .2s}
+    .dtk-card:hover{box-shadow:0 4px 18px rgba(124,58,237,.12)}
+    .dtk-card.voided{opacity:.55}
+    .dtk-header{padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem}
+    .dtk-body{padding:.75rem 1rem;border-top:1px solid #f3f4f6}
+    .dtk-qr{background:#fff;border:1.5px solid #e5e7eb;border-radius:.5rem;padding:6px;display:inline-block;flex-shrink:0}
+    .dtk-filter{display:flex;gap:.35rem;padding:.5rem 1rem;border-bottom:1px solid #f3f4f6;background:#fafafa;overflow-x:auto;flex-shrink:0}
+    .dtk-filter button{padding:.3rem .75rem;border-radius:999px;font-size:.75rem;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+    .dtk-filter button.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+    /* drawer nav icon button */
+    .nav-icon-btn{width:36px;height:36px;border-radius:.5rem;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:background .15s;background:transparent;color:#6b7280;position:relative}
+    .nav-icon-btn:hover{background:#f3f0ff;color:#7c3aed}
+    .nav-icon-btn .badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:999px;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1}
+    /* Rich toast */
+    .toast.rich{min-width:300px;display:flex;flex-direction:column;gap:.25rem}
+    .toast.rich .t-title{font-size:.9rem;font-weight:800}
+    .toast.rich .t-sub{font-size:.78rem;opacity:.9;font-weight:500}
+    @media print{
+      body>*:not(#printArea){display:none!important}
+      #printArea{display:block!important}
+      .ticket-shell{box-shadow:none;border:1px solid #ccc}
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen">
+
+<!-- ═══════════════════════════════════════════════
+     TOAST CONTAINER
+═══════════════════════════════════════════════ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ═══════════════════════════════════════════════
+     MY TICKETS SLIDE-OVER DRAWER
+═══════════════════════════════════════════════ -->
+<div id="drawerOverlay" class="drawer-overlay" onclick="closeTicketDrawer()"></div>
+<div id="ticketDrawer" class="drawer-panel" role="dialog" aria-label="My Tickets">
+
+  <!-- ── Drawer Header ── -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
+        <svg class="w-4.5 h-4.5 text-white w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      </div>
+      <div>
+        <h2 class="text-base font-black text-gray-900 leading-tight">My Tickets</h2>
+        <p class="text-[11px] text-gray-400 font-medium" id="drawerSubtitle">All your reserved tickets</p>
+      </div>
+    </div>
+    <button onclick="closeTicketDrawer()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 text-xl leading-none flex-shrink-0">&times;</button>
+  </div>
+
+  <!-- ── Filter Tabs ── -->
+  <div class="dtk-filter flex-shrink-0" id="drawerFilters">
+    <button class="active" onclick="filterDrawer('all',this)">All</button>
+    <button onclick="filterDrawer('reserved',this)">Active</button>
+    <button onclick="filterDrawer('voided',this)">Voided</button>
+    <button onclick="filterDrawer('music',this)">🎵 Music</button>
+    <button onclick="filterDrawer('sports',this)">⚽ Sports</button>
+    <button onclick="filterDrawer('tech',this)">💻 Tech</button>
+    <button onclick="filterDrawer('academic',this)">📚 Academic</button>
+    <button onclick="filterDrawer('arts',this)">🎨 Arts</button>
+    <button onclick="filterDrawer('social',this)">🥳 Social</button>
+  </div>
+
+  <!-- ── Ticket List ── -->
+  <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3" id="drawerTicketList"></div>
+
+  <!-- ── Empty State ── -->
+  <div id="drawerEmpty" class="hidden flex-1 flex flex-col items-center justify-center text-center px-8 py-12">
+    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+    </div>
+    <p class="font-bold text-gray-500 text-sm mb-1">No tickets yet</p>
+    <p class="text-xs text-gray-400 mb-4">Browse events and grab your first ticket!</p>
+    <button onclick="closeTicketDrawer();showSection('events')" class="btn-primary text-sm">Browse Events</button>
+  </div>
+
+  <!-- ── Drawer Footer ── -->
+  <div class="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+    <p class="text-xs text-gray-400"><span id="drawerTicketCount" class="font-bold text-brand">0</span> ticket(s) total</p>
+    <button onclick="closeTicketDrawer();showSection('events')" class="btn-secondary text-xs py-1.5 px-3">Browse More Events</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     BACKDROP
+═══════════════════════════════════════════════ -->
+<div id="backdrop" class="fixed inset-0 bg-black/50 z-40 hidden" onclick="closeAllModals()"></div>
+
+<!-- ═══════════════════════════════════════════════
+     AUTH MODAL
+═══════════════════════════════════════════════ -->
+<div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md pop-in overflow-y-auto max-h-[95vh]">
+    <div class="p-8">
+      <!-- header -->
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+          </div>
+          <span class="font-black text-lg text-brand">CampGroove</span>
+        </div>
+        <button onclick="closeAllModals()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <!-- tabs -->
+      <div class="flex rounded-xl bg-gray-100 p-1 mb-6">
+        <button id="tabLogin" onclick="switchAuthTab('login')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition bg-white shadow text-brand">Sign In</button>
+        <button id="tabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition text-gray-500">Register</button>
+      </div>
+
+      <!-- ── LOGIN PANEL ── -->
+      <div id="loginPanel">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+            <input id="li_email" type="email" placeholder="you@gmail.com or you@university.edu" class="input-base"
+              oninput="liveEduCheck(this,'li_email_err')" />
+            <p class="field-error" id="li_email_err">Please enter a valid email address</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Student / Staff ID <span class="text-red-500">*</span></label>
+            <input id="li_sid" type="text" placeholder="e.g. STU-20240012" class="input-base"
+              oninput="liveIdCheck(this,'li_sid_err')" />
+            <p class="field-error" id="li_sid_err">Student ID must be at least 4 characters</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+            <input id="li_pass" type="password" placeholder="••••••••" class="input-base" />
+          </div>
+          <button onclick="handleLogin()" class="btn-primary w-full mt-1">Sign In</button>
+        </div>
+        <div class="mt-5 p-3 rounded-xl bg-brand/5 border border-brand/20 text-xs text-gray-600 space-y-1">
+          <p class="font-bold text-brand mb-1">Demo Accounts (any password)</p>
+          <p>👤 <code class="bg-white px-1 rounded">student@gmail.com</code> — ID: <code class="bg-white px-1 rounded">STU-001</code></p>
+          <p>🎪 <code class="bg-white px-1 rounded">org@gmail.com</code> — ID: <code class="bg-white px-1 rounded">ORG-001</code></p>
+          <p>🛡️ <code class="bg-white px-1 rounded">admin@gmail.com</code> — ID: <code class="bg-white px-1 rounded">ADM-001</code></p>
+        </div>
+      </div>
+
+      <!-- ── REGISTER PANEL ── -->
+      <div id="registerPanel" class="hidden">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+            <input id="re_name" type="text" placeholder="Alex Johnson" class="input-base" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+            <input id="re_email" type="email" placeholder="you@gmail.com or you@university.edu" class="input-base"
+              oninput="liveEduCheck(this,'re_email_err')" />
+            <p class="field-error" id="re_email_err">Please enter a valid email address</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Student / Staff ID <span class="text-red-500">*</span></label>
+            <input id="re_sid" type="text" placeholder="e.g. STU-20240012" class="input-base"
+              oninput="liveIdCheck(this,'re_sid_err')" />
+            <p class="field-error" id="re_sid_err">Student ID must be at least 4 characters</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+            <input id="re_pass" type="password" placeholder="Min 8 characters" class="input-base" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">I am a…</label>
+            <select id="re_role" class="input-base">
+              <option value="student">Student</option>
+              <option value="organizer">Event Organizer</option>
+            </select>
+          </div>
+          <button onclick="handleRegister()" class="btn-primary w-full mt-1">Create Account</button>
+        </div>
+      </div>
+
+      <!-- ── OTP PANEL ── -->
+      <div id="otpPanel" class="hidden text-center">
+        <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-1">Check your email</h3>
+        <p class="text-sm text-gray-500 mb-5">Enter the 6-digit OTP sent to your email inbox.<br/><span class="font-bold text-brand">Demo OTP: 123456</span></p>
+        <input id="otp_code" type="text" maxlength="6" placeholder="1 2 3 4 5 6"
+          class="input-base text-center text-2xl tracking-[.5em] font-mono mb-4" />
+        <button onclick="handleOtp()" class="btn-primary w-full">Verify &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     ORGANIZER PANEL MODAL
+═══════════════════════════════════════════════ -->
+<div id="orgModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl pop-in overflow-y-auto max-h-[95vh]">
+    <div class="p-8">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-black text-gray-900">Publish New Event</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Fill in the details — it goes live instantly on the grid</p>
+        </div>
+        <button onclick="closeAllModals()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Event Title -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Event Title <span class="text-red-500">*</span></label>
+          <input id="ev_title" type="text" placeholder="Spring Fest 2025" class="input-base" />
+          <p class="field-error" id="ev_title_err">Event title is required</p>
+        </div>
+        <!-- Category -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+          <select id="ev_cat" class="input-base">
+            <option value="">— select —</option>
+            <option value="music">🎵 Music</option>
+            <option value="sports">⚽ Sports</option>
+            <option value="academic">📚 Academic</option>
+            <option value="arts">🎨 Arts</option>
+            <option value="tech">💻 Tech</option>
+            <option value="social">🥳 Social</option>
+          </select>
+          <p class="field-error" id="ev_cat_err">Please select a category</p>
+        </div>
+        <!-- Capacity -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Capacity <span class="text-red-500">*</span></label>
+          <input id="ev_cap" type="number" min="1" max="50000" placeholder="500" class="input-base" />
+          <p class="field-error" id="ev_cap_err">Enter a valid capacity (1–50,000)</p>
+        </div>
+        <!-- Date -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Date &amp; Time <span class="text-red-500">*</span></label>
+          <input id="ev_date" type="datetime-local" class="input-base" />
+          <p class="field-error" id="ev_date_err">Event date is required</p>
+        </div>
+        <!-- Ticket Price -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Ticket Price ($) <span class="text-red-500">*</span></label>
+          <input id="ev_price" type="number" min="0" step="0.01" placeholder="0.00  (0 = Free)" class="input-base" />
+          <p class="field-error" id="ev_price_err">Enter a valid price (0 for free)</p>
+        </div>
+        <!-- Location -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Venue / Location <span class="text-red-500">*</span></label>
+          <input id="ev_venue" type="text" placeholder="Main Auditorium, MIT Campus" class="input-base" />
+          <p class="field-error" id="ev_venue_err">Venue is required</p>
+        </div>
+        <!-- Promo Hype -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Promotion / Hype <span class="text-red-500">*</span></label>
+          <textarea id="ev_desc" rows="3" placeholder="What makes this event unmissable? Sell it!" class="input-base resize-none"></textarea>
+          <p class="field-error" id="ev_desc_err">Add a description</p>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100">
+        <button onclick="closeAllModals()" class="btn-secondary flex-1">Cancel</button>
+        <button onclick="publishEvent()" class="btn-primary flex-1">🚀 Publish Event</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PURCHASE MODAL  (3-step: Select → Pay → Confirm)
+═══════════════════════════════════════════════ -->
+<div id="purchaseModal" class="fixed inset-0 z-50 flex items-start justify-center hidden px-4 py-6 overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg pop-in">
+
+    <!-- ── MODAL HEADER ── -->
+    <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+      <div>
+        <h2 class="text-lg font-black text-gray-900" id="pm_title">Get Tickets</h2>
+        <p class="text-xs text-gray-400 mt-0.5" id="pm_subtitle"></p>
+      </div>
+      <button onclick="closePurchaseModal()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+    </div>
+
+    <!-- ── STEP INDICATOR ── -->
+    <div class="flex items-center gap-0 px-6 py-4">
+      <div class="step-dot active" id="sdot1">1</div>
+      <div class="step-line" id="sline1"></div>
+      <div class="step-dot pending" id="sdot2">2</div>
+      <div class="step-line" id="sline2"></div>
+      <div class="step-dot pending" id="sdot3">3</div>
+    </div>
+    <div class="flex justify-between px-5 -mt-2 mb-4 text-[10px] font-semibold text-gray-400">
+      <span>Select</span><span class="ml-8">Payment</span><span>Confirm</span>
+    </div>
+
+    <!-- ══ STEP 1 — TICKET SELECTION ══ -->
+    <div id="pm_step1" class="px-6 pb-6">
+      <!-- Event summary banner -->
+      <div class="rounded-xl p-4 mb-5 relative overflow-hidden" id="pm_banner" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
+        <div class="flex items-start gap-3">
+          <span class="text-3xl" id="pm_emoji">🎪</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-black text-gray-900 text-sm leading-tight" id="pm_evtitle"></p>
+            <p class="text-xs text-gray-500 mt-0.5" id="pm_evdate"></p>
+            <p class="text-xs text-gray-500" id="pm_evvenue"></p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="font-black text-brand text-lg" id="pm_unitprice"></p>
+            <p class="text-[10px] text-gray-400">per ticket</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory gauge -->
+      <div class="mb-5 p-3 rounded-xl bg-gray-50 border border-gray-100">
+        <div class="flex justify-between text-xs font-semibold mb-2">
+          <span class="text-gray-600">Availability</span>
+          <span id="pm_remaining_txt" class="text-brand"></span>
+        </div>
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div id="pm_inv_bar" class="h-full rounded-full transition-all duration-500"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+          <span id="pm_sold_txt"></span>
+          <span id="pm_cap_txt"></span>
+        </div>
+      </div>
+
+      <!-- Quantity selector -->
+      <div class="mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-sm font-bold text-gray-700">Number of Tickets</label>
+          <span class="text-xs text-gray-400">Max 5 per student</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="qty-btn" id="pm_qty_dec" onclick="changeQty(-1)">−</button>
+          <div class="flex-1 text-center">
+            <span id="pm_qty" class="text-2xl font-black text-brand">1</span>
+            <span class="text-sm text-gray-500 ml-1">ticket(s)</span>
+          </div>
+          <button class="qty-btn" id="pm_qty_inc" onclick="changeQty(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="rounded-xl border border-gray-100 overflow-hidden mb-5">
+        <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">Order Summary</div>
+        <div class="px-4 py-3 space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600"><span id="pm_sum_qty">1</span> × ticket</span>
+            <span class="font-semibold" id="pm_sum_subtotal">$0.00</span>
+          </div>
+          <div class="flex justify-between text-gray-500 text-xs">
+            <span>Service fee</span>
+            <span id="pm_sum_fee">$0.00</span>
+          </div>
+          <div class="flex justify-between font-black text-gray-900 pt-2 border-t border-gray-100">
+            <span>Total</span>
+            <span id="pm_sum_total" class="text-brand"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sold-out / already-bought warnings -->
+      <div id="pm_warn_soldout" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-semibold text-center">
+        ⚠️ This event is sold out
+      </div>
+      <div id="pm_warn_bought" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold text-center">
+        ✓ You already hold a ticket for this event
+      </div>
+
+      <button id="pm_btn_to_pay" onclick="purchaseStep(2)" class="btn-primary w-full">Continue to Payment →</button>
+    </div>
+
+    <!-- ══ STEP 2 — PAYMENT ══ -->
+    <div id="pm_step2" class="px-6 pb-6 hidden">
+      <p class="text-sm font-bold text-gray-700 mb-3">Choose payment method</p>
+      <div class="space-y-3 mb-5">
+
+        <!-- Option A: Student Account Balance -->
+        <label class="pay-method selected" id="pmPay_acct" onclick="selectPayMethod('account')">
+          <div class="flex items-center gap-3">
+            <input type="radio" name="payMethod" value="account" checked class="mt-0.5" />
+            <div>
+              <p class="font-bold text-sm text-gray-800">🏦 Student Account Balance</p>
+              <p class="text-xs text-gray-500 mt-0.5">Charge directly to your campus account on file</p>
+              <p class="text-xs text-green-600 font-semibold mt-1">Available balance: <span id="pm_acct_balance">$250.00</span></p>
+            </div>
+          </div>
+        </label>
+
+        <!-- Option B: Credit / Debit Card -->
+        <label class="pay-method" id="pmPay_card" onclick="selectPayMethod('card')">
+          <div class="flex items-center gap-3">
+            <input type="radio" name="payMethod" value="card" class="mt-0.5" />
+            <div class="flex-1">
+              <p class="font-bold text-sm text-gray-800">💳 Credit / Debit Card</p>
+              <p class="text-xs text-gray-500 mt-0.5">Visa, Mastercard, Amex — test mode, no real charge</p>
+            </div>
+          </div>
+          <!-- Card fields (shown when selected) -->
+          <div id="pm_card_fields" class="hidden mt-4 space-y-3 pl-6">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Card Number</label>
+              <input id="pm_cc_num" type="text" maxlength="19" placeholder="4242 4242 4242 4242"
+                class="input-base card-num !py-2 !text-sm" oninput="formatCardNum(this)" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Expiry</label>
+                <input id="pm_cc_exp" type="text" maxlength="5" placeholder="MM/YY"
+                  class="input-base !py-2 !text-sm" oninput="formatExpiry(this)" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">CVC</label>
+                <input id="pm_cc_cvc" type="text" maxlength="4" placeholder="•••"
+                  class="input-base !py-2 !text-sm" />
+              </div>
+            </div>
+            <p class="text-[10px] text-gray-400">Use test card: <code class="bg-gray-100 px-1 rounded">4242 4242 4242 4242</code> · any future expiry · any CVC</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- Payment summary recap -->
+      <div class="flex justify-between items-center p-3 bg-brand/5 border border-brand/20 rounded-xl mb-5 text-sm">
+        <span class="text-gray-600 font-semibold">Charging</span>
+        <span class="font-black text-brand text-base" id="pm_pay_total"></span>
+      </div>
+
+      <div id="pm_pay_err" class="hidden mb-3 p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-semibold"></div>
+
+      <div class="flex gap-3">
+        <button onclick="purchaseStep(1)" class="btn-secondary flex-1">← Back</button>
+        <button id="pm_btn_pay" onclick="processPayment()" class="btn-primary flex-1">
+          <span id="pm_btn_pay_label">Pay Now</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ STEP 3 — CONFIRMATION + TICKET TEMPLATE ══ -->
+    <div id="pm_step3" class="px-6 pb-6 hidden">
+      <!-- Success header -->
+      <div class="text-center mb-5">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="text-xl font-black text-gray-900">Order Confirmed! 🎉</h3>
+        <p class="text-sm text-gray-500 mt-1">Check your notifications for a receipt</p>
+      </div>
+
+      <!-- Ticket(s) list (repeats per qty) -->
+      <div id="pm_tickets_list" class="space-y-4 mb-5"></div>
+
+      <!-- Action buttons -->
+      <div class="flex flex-wrap gap-2">
+        <button onclick="printTickets()" class="btn-secondary flex-1 text-sm flex items-center justify-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Print
+        </button>
+        <button onclick="downloadTickets()" class="btn-secondary flex-1 text-sm flex items-center justify-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Save
+        </button>
+        <button onclick="closePurchaseModal();openTicketDrawer()" class="btn-primary flex-1 text-sm">🎫 View My Tickets →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden print area -->
+<div id="printArea" class="hidden"></div>
+
+<!-- Legacy QR modal (for viewing existing tickets) -->
+<div id="ticketModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm pop-in text-center p-8">
+    <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h3 class="text-lg font-black text-gray-900 mb-1">Your Ticket QR</h3>
+    <p id="ticketConfirmMsg" class="text-sm text-gray-500 mb-4"></p>
+    <div class="qr-wrap mx-auto mb-4" id="qrDisplay"></div>
+    <p class="text-xs text-gray-400 mb-4">Show this QR at the entrance</p>
+    <button onclick="closeAllModals()" class="btn-primary w-full">Done</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     ADMIN DASHBOARD MODAL
+═══════════════════════════════════════════════ -->
+<div id="adminModal" class="fixed inset-0 z-50 flex items-start justify-center hidden px-2 py-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl pop-in">
+    <!-- Admin Header -->
+    <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-red-600 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-black text-gray-900">System Admin Dashboard</h2>
+          <p class="text-xs text-gray-500">Monitor, audit and override organiser activity</p>
+        </div>
+      </div>
+      <button onclick="closeAllModals()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    </div>
+    <!-- Admin Stat Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 border-b border-gray-100">
+      <div class="bg-brand/5 rounded-xl p-4 text-center">
+        <p class="text-2xl font-black text-brand" id="adm_total_users">0</p>
+        <p class="text-xs text-gray-500 mt-0.5 font-semibold">Total Users</p>
+      </div>
+      <div class="bg-green-50 rounded-xl p-4 text-center">
+        <p class="text-2xl font-black text-green-600" id="adm_total_events">0</p>
+        <p class="text-xs text-gray-500 mt-0.5 font-semibold">Published Events</p>
+      </div>
+      <div class="bg-amber-50 rounded-xl p-4 text-center">
+        <p class="text-2xl font-black text-amber-600" id="adm_total_tickets">0</p>
+        <p class="text-xs text-gray-500 mt-0.5 font-semibold">Tickets Sold</p>
+      </div>
+      <div class="bg-blue-50 rounded-xl p-4 text-center">
+        <p class="text-2xl font-black text-blue-600" id="adm_revenue">$0</p>
+        <p class="text-xs text-gray-500 mt-0.5 font-semibold">Total Revenue</p>
+      </div>
+    </div>
+    <!-- Admin Tabs -->
+    <div class="flex gap-2 px-6 pt-4 pb-1 border-b border-gray-100">
+      <button class="tab-btn active" id="admTab_events" onclick="switchAdminTab('events')">Events</button>
+      <button class="tab-btn" id="admTab_users" onclick="switchAdminTab('users')">Users</button>
+      <button class="tab-btn" id="admTab_tickets" onclick="switchAdminTab('tickets')">Tickets</button>
+      <button class="tab-btn" id="admTab_audit" onclick="switchAdminTab('audit')">Audit Log</button>
+    </div>
+    <div class="p-6">
+
+      <!-- EVENTS TAB -->
+      <div id="admPanel_events">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-700 text-sm">All Events</h3>
+          <span class="text-xs text-gray-400">Admin can cancel or delete any event</span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+          <table class="admin-table" id="admEventsTable">
+            <thead>
+              <tr>
+                <th>Title</th><th>Category</th><th>Organiser</th><th>Date</th>
+                <th>Capacity</th><th>Sold</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admEventsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div id="admPanel_users" class="hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-700 text-sm">All Users</h3>
+          <span class="text-xs text-gray-400">Deactivate or change role of any account</span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+          <table class="admin-table" id="admUsersTable">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Student ID</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="admUsersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TICKETS TAB -->
+      <div id="admPanel_tickets" class="hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-700 text-sm">All Tickets</h3>
+          <span class="text-xs text-gray-400">Admin can void any ticket</span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Ticket ID</th><th>Student</th><th>Event</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="admTicketsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AUDIT LOG TAB -->
+      <div id="admPanel_audit" class="hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-700 text-sm">Audit Log</h3>
+          <span class="text-xs text-gray-400">System-wide activity trail</span>
+        </div>
+        <div class="rounded-xl border border-gray-100 overflow-hidden">
+          <ul id="auditLogList" class="divide-y divide-gray-50 max-h-72 overflow-y-auto text-sm"></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TOP NAVIGATION BAR
+═══════════════════════════════════════════════ -->
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <!-- Brand -->
+    <div class="flex items-center gap-2 flex-shrink-0 cursor-pointer" onclick="scrollToTop()">
+      <div class="w-9 h-9 bg-brand rounded-xl flex items-center justify-center shadow-md">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      </div>
+      <span class="text-xl font-black text-brand tracking-tight">CampGroove</span>
+    </div>
+    <!-- Desktop nav links -->
+    <div class="hidden md:flex items-center gap-1 flex-1 px-6">
+      <span class="nav-link active" onclick="showSection('events')">Events</span>
+      <span class="nav-link" id="navOrganizer" onclick="showSection('organizer')" style="display:none">My Events</span>
+      <span class="nav-link" id="navAdmin" onclick="openAdminDashboard()" style="display:none">⚙ Admin</span>
+    </div>
+    <!-- Right side actions -->
+    <div class="flex items-center gap-2">
+      <!-- My Tickets drawer trigger (logged in) -->
+      <button id="navTicketBtn" class="nav-icon-btn hidden" onclick="openTicketDrawer()" title="My Tickets">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+        <span class="badge hidden" id="ticketNavBadge">0</span>
+      </button>
+      <!-- Notification bell (logged in) -->
+      <div id="navNotifBell" class="relative hidden" onclick="toggleNotifDropdown()">
+        <button class="relative w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition cursor-pointer">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span id="notifBadge" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 top-11 bg-white rounded-2xl shadow-2xl border border-gray-100 w-80 z-50 slide-down overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <span class="font-bold text-sm text-gray-800">Notifications</span>
+            <button onclick="markAllRead(event)" class="text-xs text-brand font-semibold hover:underline">Mark all read</button>
+          </div>
+          <ul id="notifList" class="max-h-64 overflow-y-auto divide-y divide-gray-50 text-sm"></ul>
+          <div class="px-4 py-2 text-center text-xs text-gray-400" id="notifEmpty">No notifications yet</div>
+        </div>
+      </div>
+      <!-- Not logged in -->
+      <button id="btnSignIn" onclick="openAuthModal('login')" class="btn-secondary hidden md:flex items-center gap-1">Sign In</button>
+      <button id="btnRegisterNav" onclick="openAuthModal('register')" class="btn-primary hidden md:flex items-center gap-1">Get Started</button>
+      <!-- Logged in user chip -->
+      <div id="userChip" class="hidden items-center gap-2 bg-brand/8 border border-brand/20 rounded-full px-3 py-1.5 cursor-pointer" onclick="toggleUserMenu()">
+        <div class="w-7 h-7 bg-brand rounded-full flex items-center justify-center text-white text-xs font-black" id="userAvatar">?</div>
+        <span class="text-sm font-semibold text-gray-700 hidden sm:block max-w-[120px] truncate" id="userNameDisplay"></span>
+        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div id="userMenu" class="hidden absolute right-4 top-14 bg-white rounded-2xl shadow-2xl border border-gray-100 w-52 z-50 slide-down overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p class="font-bold text-sm text-gray-800 truncate" id="userMenuName"></p>
+          <p class="text-xs text-gray-500 truncate" id="userMenuEmail"></p>
+          <span class="tag mt-1" id="userMenuRoleBadge"></span>
+        </div>
+        <ul class="text-sm">
+          <li class="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-gray-700" id="menuMyTickets" onclick="openTicketDrawer();closeUserMenu()" style="display:none">🎫 My Tickets</li>
+          <li class="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-gray-700" id="menuOrganizer" onclick="showSection('organizer');closeUserMenu()" style="display:none">🎪 My Events</li>
+          <li class="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-gray-700" id="menuAdmin" onclick="openAdminDashboard();closeUserMenu()" style="display:none">⚙ Admin Panel</li>
+          <li class="px-4 py-2.5 hover:bg-red-50 cursor-pointer text-red-600 font-semibold border-t border-gray-100" onclick="handleLogout()">Sign Out</li>
+        </ul>
+      </div>
+      <!-- Mobile hamburger -->
+      <button class="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100" onclick="toggleMobileMenu()">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="hidden bg-white border-t border-gray-100 px-4 pb-4 md:hidden">
+    <div class="flex flex-col gap-1 pt-2">
+      <span class="nav-link py-2.5 text-sm" onclick="showSection('events');toggleMobileMenu()">Events</span>
+      <span class="nav-link py-2.5 text-sm" id="mobMyTickets" onclick="openTicketDrawer();toggleMobileMenu()" style="display:none">🎫 My Tickets</span>
+      <span class="nav-link py-2.5 text-sm" id="mobOrganizer" onclick="showSection('organizer');toggleMobileMenu()" style="display:none">My Events</span>
+      <span class="nav-link py-2.5 text-sm" id="mobAdmin" onclick="openAdminDashboard();toggleMobileMenu()" style="display:none">Admin Panel</span>
+      <div class="flex gap-2 mt-2 pt-3 border-t border-gray-100">
+        <button id="mobSignIn" onclick="openAuthModal('login');toggleMobileMenu()" class="btn-secondary flex-1 text-sm">Sign In</button>
+        <button id="mobRegister" onclick="openAuthModal('register');toggleMobileMenu()" class="btn-primary flex-1 text-sm">Register</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     HERO SECTION
+═══════════════════════════════════════════════ -->
+<section class="hero-gradient text-white py-16 md:py-24 px-4">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+      Spring Semester 2025 — Events Now Live
+    </div>
+    <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight mb-4">
+      Your Campus.<br/>
+      <span class="text-yellow-300">Your Events.</span><br/>
+      Your Groove.
+    </h1>
+    <p class="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
+      Discover concerts, hackathons, sports finals and parties on your campus.
+      Reserve your spot in seconds — no queues, no stress.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <button onclick="document.getElementById('eventsSection').scrollIntoView({behavior:'smooth'})"
+        class="bg-white text-brand font-black py-3.5 px-8 rounded-xl hover:bg-yellow-50 transition shadow-xl text-base">
+        Browse Events →
+      </button>
+      <button onclick="openAuthModal('register')" id="heroRegBtn"
+        class="bg-white/15 border border-white/30 text-white font-bold py-3.5 px-8 rounded-xl hover:bg-white/25 transition text-base backdrop-blur-sm">
+        Join Free
+      </button>
+    </div>
+    <!-- Stats row -->
+    <div class="flex flex-wrap justify-center gap-8 mt-12 pt-8 border-t border-white/20">
+      <div class="text-center">
+        <p class="text-3xl font-black text-yellow-300" id="heroEventCount">0</p>
+        <p class="text-sm text-white/70 font-medium">Upcoming Events</p>
+      </div>
+      <div class="text-center">
+        <p class="text-3xl font-black text-yellow-300" id="heroStudentCount">0</p>
+        <p class="text-sm text-white/70 font-medium">Students Registered</p>
+      </div>
+      <div class="text-center">
+        <p class="text-3xl font-black text-yellow-300" id="heroTicketCount">0</p>
+        <p class="text-sm text-white/70 font-medium">Tickets Reserved</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT AREA
+═══════════════════════════════════════════════ -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+
+  <!-- ── EVENTS SECTION ── -->
+  <section id="eventsSection">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl font-black text-gray-900">Upcoming Events</h2>
+        <p class="text-sm text-gray-500 mt-0.5">All published campus events this semester</p>
+      </div>
+      <!-- Filter bar -->
+      <div class="flex flex-wrap gap-2 items-center">
+        <input id="searchInput" type="search" placeholder="Search events…" oninput="filterEvents()"
+          class="input-base !w-44 !py-2 !text-sm" />
+        <select id="catFilter" onchange="filterEvents()" class="input-base !w-36 !py-2 !text-sm">
+          <option value="">All Categories</option>
+          <option value="music">Music</option>
+          <option value="sports">Sports</option>
+          <option value="academic">Academic</option>
+          <option value="arts">Arts</option>
+          <option value="tech">Tech</option>
+          <option value="social">Social</option>
+        </select>
+      </div>
+    </div>
+    <!-- Event Grid -->
+    <div id="eventGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+    <div id="noEvents" class="hidden text-center py-20 text-gray-400">
+      <div class="text-5xl mb-3">🎪</div>
+      <p class="font-semibold">No events found</p>
+      <p class="text-sm">Try a different filter or check back later</p>
+    </div>
+  </section>
+
+  <!-- ── MY TICKETS SECTION (students) ── -->
+  <section id="myTicketsSection" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-black text-gray-900">My Tickets</h2>
+        <p class="text-sm text-gray-500 mt-0.5">All your reserved tickets</p>
+      </div>
+    </div>
+    <div id="myTicketsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <div id="noTickets" class="hidden text-center py-20 text-gray-400">
+      <div class="text-5xl mb-3">🎫</div>
+      <p class="font-semibold">No tickets yet</p>
+      <button onclick="showSection('events')" class="btn-primary mt-4 text-sm">Browse Events</button>
+    </div>
+  </section>
+
+  <!-- ── ORGANIZER SECTION ── -->
+  <section id="organizerSection" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-black text-gray-900">My Events</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Events you've published</p>
+      </div>
+      <button onclick="openOrgModal()" class="btn-primary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Publish Event
+      </button>
+    </div>
+    <div id="orgEventsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <div id="noOrgEvents" class="hidden text-center py-20 text-gray-400">
+      <div class="text-5xl mb-3">🎪</div>
+      <p class="font-semibold">No events published yet</p>
+      <button onclick="openOrgModal()" class="btn-primary mt-4 text-sm">Publish Your First Event</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════ -->
+<footer class="bg-white border-t border-gray-100 py-8 mt-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-brand rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      </div>
+      <span class="font-bold text-gray-600">CampGroove</span>
+    </div>
+    <span>&copy; 2025 CampGroove. Open to all college communities.</span>
+    <span class="text-xs">Built on the CampGroove Architecture Plan</span>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT — GLOBAL STATE STORE + COMPONENTS
+═══════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   GLOBAL STATE STORE
+   Single source of truth for the whole SPA
+───────────────────────────────────────────── */
+const Store = (() => {
+  // ── Seed data ──
+  const SEED_USERS = [
+    { id:'u1', name:'Alex Chen',       email:'student@gmail.com', sid:'STU-001', password:'demo', role:'student',   isActive:true,  createdAt:'2025-01-10' },
+    { id:'u2', name:'Jordan Rivera',   email:'org@gmail.com',     sid:'ORG-001', password:'demo', role:'organizer', isActive:true,  createdAt:'2025-01-08' },
+    { id:'u3', name:'System Admin',    email:'admin@gmail.com',   sid:'ADM-001', password:'demo', role:'admin',     isActive:true,  createdAt:'2025-01-01' },
+  ];
+  const SEED_EVENTS = [
+    { id:'e1', title:'Spring Music Fest',      category:'music',    capacity:600, ticketsRemaining:412, price:15,  venue:'Main Quad, MIT',          date:'2025-06-14T18:00', organizer:'u2', organizerName:'Jordan Rivera', status:'published', description:'The biggest outdoor concert of the year. Live bands, DJs, food trucks!' },
+    { id:'e2', title:'Inter-College Hackathon', category:'tech',     capacity:200, ticketsRemaining:88,  price:0,   venue:'CS Building 32, MIT',     date:'2025-07-05T09:00', organizer:'u2', organizerName:'Jordan Rivera', status:'published', description:'48 hrs. Build something legendary. $10,000 in prizes. .edu students only.' },
+    { id:'e3', title:'Campus Art Gala',         category:'arts',     capacity:150, ticketsRemaining:150, price:10,  venue:'Media Lab Atrium, MIT',   date:'2025-06-28T17:30', organizer:'u2', organizerName:'Jordan Rivera', status:'published', description:'Showcasing student artwork across 12 departments. Opening night reception.' },
+    { id:'e4', title:'Finals Week 5K Run',      category:'sports',   capacity:300, ticketsRemaining:210, price:5,   venue:'Athletic Fields, MIT',    date:'2025-05-10T07:00', organizer:'u2', organizerName:'Jordan Rivera', status:'published', description:'Run off the stress! Fun run open to all students. T-shirt included.' },
+    { id:'e5', title:'AI Research Summit',      category:'academic', capacity:500, ticketsRemaining:320, price:0,   venue:'Kresge Auditorium, MIT',  date:'2025-07-19T10:00', organizer:'u2', organizerName:'Jordan Rivera', status:'published', description:'Keynotes from leading researchers. Panels on LLMs, robotics & ethics.' },
+    { id:'e6', title:'End of Year Block Party', category:'social',   capacity:800, ticketsRemaining:540, price:20,  venue:'Student Union, MIT',      date:'2025-08-01T20:00', organizer:'u2', organizerName:'Jordan Rivera', status:'published', description:'Celebrate the semester end! DJ, photo booth, unlimited snacks.' },
+  ];
+  const SEED_TICKETS = [];
+  const SEED_AUDIT = [
+    { ts:'2025-01-10 09:12', actor:'System Admin', action:'User registered: student@gmail.com' },
+    { ts:'2025-01-09 14:30', actor:'Jordan Rivera', action:'Published event: Spring Music Fest' },
+    { ts:'2025-01-08 11:05', actor:'System Admin', action:'User registered: org@gmail.com' },
+  ];
+
+  let _state = {
+    currentUser: null,
+    users:   [...SEED_USERS],
+    events:  [...SEED_EVENTS],
+    tickets: [...SEED_TICKETS],
+    notifications: [],
+    auditLog: [...SEED_AUDIT],
+    pendingRegEmail: null,
+    pendingRegData: null,
+  };
+
+  // Subscribers
+  const _listeners = [];
+  function subscribe(fn){ _listeners.push(fn) }
+  function _emit(){ _listeners.forEach(fn => fn(_state)) }
+
+  function getState(){ return _state }
+
+  function login(user){
+    _state.currentUser = user;
+    _emit();
+  }
+  function logout(){
+    _state.currentUser = null;
+    _emit();
+  }
+  function registerUser(data){
+    const newUser = {
+      id: 'u'+Date.now(),
+      name: data.name,
+      email: data.email,
+      sid: data.sid,
+      password: data.password,
+      role: data.role,
+      isActive: true,
+      createdAt: new Date().toISOString().slice(0,10)
+    };
+    _state.users.push(newUser);
+    addAudit('System', `New user registered: ${data.email} (${data.role})`);
+    _emit();
+    return newUser;
+  }
+  function addEvent(ev){
+    _state.events.unshift(ev);
+    addAudit(_state.currentUser.name, `Published event: ${ev.title}`);
+    _emit();
+  }
+  function cancelEvent(id){
+    const ev = _state.events.find(e=>e.id===id);
+    if(ev){
+      ev.status = 'cancelled';
+      addAudit(_state.currentUser?.name||'Admin', `Cancelled event: ${ev.title}`);
+      // notify ticket holders
+      _state.tickets.filter(t=>t.eventId===id&&t.status==='reserved').forEach(t=>{
+        addNotification(t.studentId, `Event "${ev.title}" was cancelled. Your ticket will be refunded.`, 'warning');
+      });
+      _emit();
+    }
+  }
+  function deleteEvent(id){
+    const ev = _state.events.find(e=>e.id===id);
+    _state.events = _state.events.filter(e=>e.id!==id);
+    if(ev) addAudit(_state.currentUser?.name||'Admin', `Deleted event: ${ev.title}`);
+    _emit();
+  }
+  // Purchase an order of qty tickets atomically.
+  // Returns array of created ticket objects, or null if insufficient inventory.
+  function purchaseOrder(eventId, qty, paymentMethod){
+    const ev = _state.events.find(e=>e.id===eventId);
+    if(!ev || ev.ticketsRemaining < qty) return null;
+    ev.ticketsRemaining -= qty;
+    const orderRef = 'ORD-'+Date.now().toString(36).toUpperCase().slice(-6);
+    const now = new Date().toISOString();
+    const tickets = Array.from({length: qty}, (_, i) => {
+      // Unique hash: event + student + order + seat index + timestamp
+      const hashSource = `${eventId}:${_state.currentUser.id}:${orderRef}:${i}:${now}`;
+      let h = 0x811c9dc5;
+      for(let j=0;j<hashSource.length;j++) h = Math.imul(h^hashSource.charCodeAt(j), 0x01000193)>>>0;
+      const tid = 'TKT-'+h.toString(16).toUpperCase().padStart(8,'0').slice(0,4)+'-'+h.toString(16).toUpperCase().slice(4,8);
+      return {
+        id: tid,
+        orderRef,
+        seatNum: i+1,
+        totalInOrder: qty,
+        eventId,
+        eventTitle: ev.title,
+        category: ev.category,
+        venue: ev.venue,
+        date: ev.date,
+        organizer: ev.organizerName,
+        studentId: _state.currentUser.id,
+        studentName: _state.currentUser.name,
+        studentEmail: _state.currentUser.email,
+        studentSid: _state.currentUser.sid,
+        amountPaid: ev.price,
+        paymentMethod,
+        status:'reserved',
+        createdAt: now
+      };
+    });
+    tickets.forEach(t => _state.tickets.push(t));
+    const totalCharged = (ev.price * qty).toFixed(2);
+    addNotification(
+      _state.currentUser.id,
+      `${qty} ticket${qty>1?'s':''} confirmed for "${ev.title}" — $${totalCharged} charged via ${paymentMethod}. Order ${orderRef}`,
+      'success'
+    );
+    addAudit(_state.currentUser.name, `Purchased ${qty}× ticket for "${ev.title}" (${orderRef}) via ${paymentMethod}`);
+    _emit();
+    return tickets;
+  }
+  // Legacy single-ticket alias used by organiser card actions
+  function reserveTicket(eventId){
+    const t = purchaseOrder(eventId, 1, 'account');
+    return t ? t[0] : null;
+  }
+  function voidTicket(ticketId){
+    const t = _state.tickets.find(t=>t.id===ticketId);
+    if(t){
+      t.status='voided';
+      addAudit(_state.currentUser?.name||'Admin', `Voided ticket ${ticketId} for: ${t.eventTitle}`);
+      _emit();
+    }
+  }
+  function deactivateUser(userId){
+    const u = _state.users.find(u=>u.id===userId);
+    if(u){
+      u.isActive = !u.isActive;
+      addAudit(_state.currentUser?.name||'Admin', `${u.isActive?'Reactivated':'Deactivated'} user: ${u.email}`);
+      _emit();
+    }
+  }
+  function changeRole(userId, role){
+    const u = _state.users.find(u=>u.id===userId);
+    if(u){
+      const old = u.role;
+      u.role = role;
+      addAudit(_state.currentUser?.name||'Admin', `Changed role of ${u.email}: ${old} → ${role}`);
+      _emit();
+    }
+  }
+  function addNotification(userId, message, type='info'){
+    _state.notifications.unshift({ id:'n'+Date.now()+Math.random(), userId, message, type, read:false, ts: new Date().toISOString() });
+    _emit();
+  }
+  function markNotifRead(id){
+    const n = _state.notifications.find(n=>n.id===id);
+    if(n) n.read = true;
+    _emit();
+  }
+  function markAllNotifsRead(){
+    _state.notifications.filter(n=>n.userId===_state.currentUser?.id).forEach(n=>n.read=true);
+    _emit();
+  }
+  function addAudit(actor, action){
+    const now = new Date();
+    _state.auditLog.unshift({ ts: now.toISOString().slice(0,16).replace('T',' '), actor, action });
+    if(_state.auditLog.length>100) _state.auditLog.pop();
+  }
+
+  return { getState, subscribe, login, logout, registerUser, addEvent,
+           cancelEvent, deleteEvent, purchaseOrder, reserveTicket, voidTicket,
+           deactivateUser, changeRole, addNotification, markNotifRead, markAllNotifsRead };
+})();
+
+/* ─────────────────────────────────────────────
+   UTILS
+───────────────────────────────────────────── */
+// Accepts any valid email format — gmail, yahoo, outlook, .edu, custom domains, etc.
+const EDU_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/i;
+
+function formatDate(d){
+  if(!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function formatPrice(p){ return p===0 ? 'Free' : '$'+Number(p).toFixed(2) }
+function tagClass(cat){ return `tag tag-${cat||'social'}` }
+function categoryEmoji(cat){
+  const m={music:'🎵',sports:'⚽',academic:'📚',arts:'🎨',tech:'💻',social:'🥳'};
+  return m[cat]||'🎪';
+}
+function genId(){ return 'e'+Date.now()+Math.floor(Math.random()*1000) }
+
+// Live email validation (any properly-formatted address)
+function liveEduCheck(input, errId){
+  const v = input.value.trim();
+  const err = document.getElementById(errId);
+  if(!v){ input.classList.remove('invalid','valid'); err.style.display='none'; return; }
+  if(EDU_REGEX.test(v)){
+    input.classList.remove('invalid'); input.classList.add('valid');
+    err.style.display='none';
+  } else {
+    input.classList.remove('valid'); input.classList.add('invalid');
+    err.style.display='block';
+  }
+}
+function liveIdCheck(input, errId){
+  const v = input.value.trim();
+  const err = document.getElementById(errId);
+  if(!v){ input.classList.remove('invalid','valid'); err.style.display='none'; return; }
+  if(v.length>=4){
+    input.classList.remove('invalid'); input.classList.add('valid');
+    err.style.display='none';
+  } else {
+    input.classList.remove('valid'); input.classList.add('invalid');
+    err.style.display='block';
+  }
+}
+function showFieldError(id, msg){
+  const el = document.getElementById(id);
+  if(el){ el.textContent=msg; el.style.display='block'; }
+}
+function clearFieldErrors(...ids){
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el){ el.style.display='none'; } });
+}
+function markInvalid(id){ const el=document.getElementById(id); if(el){ el.classList.add('invalid'); } }
+function clearInvalid(...ids){ ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('invalid'); }); }
+
+/* ─────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────── */
+function toast(msg, type='info'){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type} fade-in`;
+  el.innerHTML = (type==='success'?'✓ ':type==='error'?'✗ ':'ℹ ') + msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .5s'; setTimeout(()=>el.remove(), 500); }, 3500);
+}
+/* Rich two-line toast — used for order confirmation */
+function toastRich(title, sub){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast success rich fade-in';
+  el.innerHTML = `<span class="t-title">✓ ${esc(title)}</span><span class="t-sub">${esc(sub)}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .6s'; setTimeout(()=>el.remove(), 600); }, 5000);
+}
+
+/* ─────────────────────────────────────────────
+   MODAL HELPERS
+───────────────────────────────────────────── */
+function openModal(id){
+  document.getElementById('backdrop').classList.remove('hidden');
+  document.getElementById(id).classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeAllModals(){
+  ['authModal','orgModal','ticketModal','adminModal','purchaseModal'].forEach(id=>{
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById('backdrop').classList.add('hidden');
+  document.body.style.overflow='';
+}
+function closePurchaseModal(){
+  document.getElementById('purchaseModal').classList.add('hidden');
+  document.getElementById('backdrop').classList.add('hidden');
+  document.body.style.overflow='';
+}
+function openAuthModal(tab='login'){
+  openModal('authModal');
+  switchAuthTab(tab);
+}
+function openOrgModal(){
+  const { currentUser } = Store.getState();
+  if(!currentUser){ toast('Please sign in first','error'); openAuthModal(); return; }
+  if(currentUser.role!=='organizer' && currentUser.role!=='admin'){ toast('Organizer access required','error'); return; }
+  // Reset form
+  ['ev_title','ev_cat','ev_cap','ev_date','ev_price','ev_venue','ev_desc'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  clearFieldErrors('ev_title_err','ev_cat_err','ev_cap_err','ev_date_err','ev_price_err','ev_venue_err','ev_desc_err');
+  openModal('orgModal');
+}
+function openAdminDashboard(){
+  const { currentUser } = Store.getState();
+  if(!currentUser || currentUser.role!=='admin'){ toast('Admin access required','error'); return; }
+  refreshAdminDashboard();
+  openModal('adminModal');
+}
+
+/* ─────────────────────────────────────────────
+   AUTH TABS
+───────────────────────────────────────────── */
+function switchAuthTab(tab){
+  document.getElementById('loginPanel').classList.toggle('hidden', tab!=='login');
+  document.getElementById('registerPanel').classList.toggle('hidden', tab!=='register');
+  document.getElementById('otpPanel').classList.add('hidden');
+  document.getElementById('tabLogin').className = tab==='login'
+    ? 'flex-1 py-2 rounded-lg text-sm font-semibold transition bg-white shadow text-brand'
+    : 'flex-1 py-2 rounded-lg text-sm font-semibold transition text-gray-500';
+  document.getElementById('tabRegister').className = tab==='register'
+    ? 'flex-1 py-2 rounded-lg text-sm font-semibold transition bg-white shadow text-brand'
+    : 'flex-1 py-2 rounded-lg text-sm font-semibold transition text-gray-500';
+}
+
+/* ─────────────────────────────────────────────
+   AUTH — LOGIN
+───────────────────────────────────────────── */
+function handleLogin(){
+  const email = document.getElementById('li_email').value.trim();
+  const sid   = document.getElementById('li_sid').value.trim();
+  clearFieldErrors('li_email_err','li_sid_err');
+  clearInvalid('li_email','li_sid');
+  let ok = true;
+  if(!EDU_REGEX.test(email)){
+    showFieldError('li_email_err','Please enter a valid email address');
+    markInvalid('li_email'); ok=false;
+  }
+  if(sid.length<4){
+    showFieldError('li_sid_err','Student ID must be at least 4 characters');
+    markInvalid('li_sid'); ok=false;
+  }
+  if(!ok) return;
+  const { users } = Store.getState();
+  const user = users.find(u=>u.email.toLowerCase()===email.toLowerCase() && u.sid===sid);
+  if(!user){ toast('No account found — check your email & Student ID','error'); return; }
+  if(!user.isActive){ toast('Your account has been deactivated. Contact admin.','error'); return; }
+  Store.login(user);
+  closeAllModals();
+  toast(`Welcome back, ${user.name.split(' ')[0]}! 🎉`, 'success');
+}
+
+/* ─────────────────────────────────────────────
+   AUTH — REGISTER
+───────────────────────────────────────────── */
+function handleRegister(){
+  const name  = document.getElementById('re_name').value.trim();
+  const email = document.getElementById('re_email').value.trim();
+  const sid   = document.getElementById('re_sid').value.trim();
+  const pass  = document.getElementById('re_pass').value;
+  const role  = document.getElementById('re_role').value;
+  clearFieldErrors('re_email_err','re_sid_err');
+  clearInvalid('re_email','re_sid');
+  let ok=true;
+  if(!name){ toast('Name is required','error'); ok=false; }
+  if(!EDU_REGEX.test(email)){
+    showFieldError('re_email_err','Please enter a valid email address');
+    markInvalid('re_email'); ok=false;
+  }
+  if(sid.length<4){
+    showFieldError('re_sid_err','Student ID must be at least 4 characters');
+    markInvalid('re_sid'); ok=false;
+  }
+  if(pass.length<8){ toast('Password must be at least 8 characters','error'); ok=false; }
+  if(!ok) return;
+  const { users } = Store.getState();
+  if(users.find(u=>u.email.toLowerCase()===email.toLowerCase())){
+    toast('An account with this email already exists','error'); return;
+  }
+  // Store pending data and show OTP
+  Store.getState().pendingRegEmail = email;
+  Store.getState().pendingRegData  = { name, email, sid, password:pass, role };
+  document.getElementById('loginPanel').classList.add('hidden');
+  document.getElementById('registerPanel').classList.add('hidden');
+  document.getElementById('otpPanel').classList.remove('hidden');
+  document.getElementById('otp_code').value='';
+  toast('OTP sent to '+email+' (demo: 123456)','info');
+}
+
+/* ─────────────────────────────────────────────
+   AUTH — OTP
+───────────────────────────────────────────── */
+function handleOtp(){
+  const code = document.getElementById('otp_code').value.trim();
+  if(code!=='123456'){ toast('Invalid OTP — demo code is 123456','error'); return; }
+  const data = Store.getState().pendingRegData;
+  if(!data){ toast('Session expired, please retry','error'); return; }
+  const user = Store.registerUser(data);
+  Store.login(user);
+  closeAllModals();
+  toast(`Account created! Welcome to CampGroove, ${user.name.split(' ')[0]}! 🎊`, 'success');
+}
+
+/* ─────────────────────────────────────────────
+   AUTH — LOGOUT
+───────────────────────────────────────────── */
+function handleLogout(){
+  const name = Store.getState().currentUser?.name;
+  Store.logout();
+  showSection('events');
+  toast(`See you next time${name?' '+name.split(' ')[0]:''}! 👋`, 'info');
+}
+
+/* ─────────────────────────────────────────────
+   ORGANIZER — PUBLISH EVENT
+───────────────────────────────────────────── */
+function publishEvent(){
+  const title = document.getElementById('ev_title').value.trim();
+  const cat   = document.getElementById('ev_cat').value;
+  const cap   = parseInt(document.getElementById('ev_cap').value,10);
+  const date  = document.getElementById('ev_date').value;
+  const price = parseFloat(document.getElementById('ev_price').value);
+  const venue = document.getElementById('ev_venue').value.trim();
+  const desc  = document.getElementById('ev_desc').value.trim();
+  clearFieldErrors('ev_title_err','ev_cat_err','ev_cap_err','ev_date_err','ev_price_err','ev_venue_err','ev_desc_err');
+  let ok=true;
+  if(!title){ showFieldError('ev_title_err','Event title is required'); ok=false; }
+  if(!cat){ showFieldError('ev_cat_err','Please select a category'); ok=false; }
+  if(!cap||cap<1||cap>50000){ showFieldError('ev_cap_err','Enter a valid capacity (1–50,000)'); ok=false; }
+  if(!date){ showFieldError('ev_date_err','Event date is required'); ok=false; }
+  if(isNaN(price)||price<0){ showFieldError('ev_price_err','Enter a valid price (0 for free)'); ok=false; }
+  if(!venue){ showFieldError('ev_venue_err','Venue is required'); ok=false; }
+  if(!desc){ showFieldError('ev_desc_err','Add a description'); ok=false; }
+  if(!ok) return;
+  const { currentUser } = Store.getState();
+  const newEvent = {
+    id: genId(),
+    title, category:cat, capacity:cap, ticketsRemaining:cap,
+    price: isNaN(price)?0:price,
+    venue, date, description:desc,
+    organizer: currentUser.id,
+    organizerName: currentUser.name,
+    status:'published',
+    createdAt: new Date().toISOString()
+  };
+  Store.addEvent(newEvent);
+  closeAllModals();
+  toast(`"${title}" is now live on the event grid! 🚀`, 'success');
+  showSection('organizer');
+}
+
+/* ─────────────────────────────────────────────
+   PURCHASE MODAL STATE
+───────────────────────────────────────────── */
+const PM = {
+  eventId: null,
+  qty: 1,
+  payMethod: 'account',
+  MAX_PER_STUDENT: 5,
+  // mock campus account balance
+  balance: 250.00,
+};
+
+/* Open the purchase modal for a given event card "Get Ticket" click */
+function openPurchaseModal(eventId){
+  const { currentUser, events, tickets } = Store.getState();
+  if(!currentUser){ toast('Sign in to get tickets','error'); openAuthModal('login'); return; }
+  if(currentUser.role==='admin'){ toast('Admins cannot purchase tickets','info'); return; }
+
+  const ev = events.find(e=>e.id===eventId);
+  if(!ev) return;
+
+  PM.eventId = eventId;
+  PM.qty = 1;
+  PM.payMethod = 'account';
+
+  // Count tickets already held by this student for this event
+  const alreadyHeld = tickets.filter(t=>t.eventId===eventId&&t.studentId===currentUser.id&&t.status==='reserved').length;
+  const canBuy = Math.min(PM.MAX_PER_STUDENT - alreadyHeld, ev.ticketsRemaining);
+
+  // Populate event summary banner
+  document.getElementById('pm_title').textContent = 'Get Tickets';
+  document.getElementById('pm_subtitle').textContent = ev.title;
+  document.getElementById('pm_emoji').textContent = categoryEmoji(ev.category);
+  document.getElementById('pm_evtitle').textContent = ev.title;
+  document.getElementById('pm_evdate').textContent = '📅 '+formatDate(ev.date);
+  document.getElementById('pm_evvenue').textContent = '📍 '+ev.venue;
+  document.getElementById('pm_unitprice').textContent = ev.price===0 ? 'FREE' : '$'+ev.price.toFixed(2);
+  const banner = document.getElementById('pm_banner');
+  banner.style.background = catGradient(ev.category);
+
+  // Inventory gauge
+  const sold = ev.capacity - ev.ticketsRemaining;
+  const pct  = ev.capacity>0 ? Math.round((sold/ev.capacity)*100) : 100;
+  document.getElementById('pm_remaining_txt').textContent = ev.ticketsRemaining + ' tickets left';
+  document.getElementById('pm_sold_txt').textContent = sold+' sold';
+  document.getElementById('pm_cap_txt').textContent = 'Capacity: '+ev.capacity;
+  const bar = document.getElementById('pm_inv_bar');
+  bar.style.width = pct+'%';
+  bar.style.background = pct>85?'#f87171':pct>55?'#fbbf24':'#4ade80';
+
+  // Warnings
+  document.getElementById('pm_warn_soldout').classList.toggle('hidden', ev.ticketsRemaining>0);
+  document.getElementById('pm_warn_bought').classList.toggle('hidden', alreadyHeld===0);
+
+  // Button state
+  const btn = document.getElementById('pm_btn_to_pay');
+  if(canBuy<=0){
+    btn.disabled=true;
+    btn.textContent = alreadyHeld>=PM.MAX_PER_STUDENT ? 'Limit reached (5/student)' : 'Sold Out';
+    btn.classList.add('opacity-50','cursor-not-allowed');
+  } else {
+    btn.disabled=false;
+    btn.textContent='Continue to Payment →';
+    btn.classList.remove('opacity-50','cursor-not-allowed');
+  }
+
+  // Qty bounds
+  PM._canBuy = canBuy;
+  PM._ev = ev;
+  updateQtyUI();
+
+  // Reset to step 1
+  purchaseStep(1, true);
+
+  // Open modal
+  document.getElementById('backdrop').classList.remove('hidden');
+  document.getElementById('purchaseModal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+
+/* ── Step navigation ── */
+function purchaseStep(step, skipAnim){
+  [1,2,3].forEach(s=>{
+    document.getElementById('pm_step'+s).classList.toggle('hidden', s!==step);
+  });
+  // Step dots
+  const labels=['sdot1','sdot2','sdot3'];
+  labels.forEach((id,i)=>{
+    const dot=document.getElementById(id);
+    dot.className='step-dot '+(i+1<step?'done':i+1===step?'active':'pending');
+    if(i+1<step) dot.innerHTML='✓';
+    else dot.textContent=i+1;
+  });
+  document.getElementById('sline1').className='step-line'+(step>1?' done':'');
+  document.getElementById('sline2').className='step-line'+(step>2?' done':'');
+
+  if(step===2) populatePaymentStep();
+}
+
+/* ── Qty controls ── */
+function changeQty(delta){
+  const max = Math.min(PM.MAX_PER_STUDENT, PM._canBuy||1);
+  PM.qty = Math.max(1, Math.min(max, PM.qty+delta));
+  updateQtyUI();
+}
+function updateQtyUI(){
+  const ev = PM._ev;
+  if(!ev) return;
+  const max = Math.min(PM.MAX_PER_STUDENT, PM._canBuy||1);
+  document.getElementById('pm_qty').textContent = PM.qty;
+  document.getElementById('pm_qty_dec').disabled = PM.qty<=1;
+  document.getElementById('pm_qty_inc').disabled = PM.qty>=max;
+  // order summary
+  const sub = ev.price * PM.qty;
+  const fee = ev.price===0 ? 0 : parseFloat((sub*0.03).toFixed(2)); // 3% service fee
+  const total = sub + fee;
+  document.getElementById('pm_sum_qty').textContent = PM.qty;
+  document.getElementById('pm_sum_subtotal').textContent = ev.price===0?'Free':'$'+sub.toFixed(2);
+  document.getElementById('pm_sum_fee').textContent = ev.price===0?'—':'$'+fee.toFixed(2);
+  document.getElementById('pm_sum_total').textContent = ev.price===0?'Free':'$'+total.toFixed(2);
+  PM._total = total;
+  PM._fee = fee;
+}
+
+/* ── Payment method selection ── */
+function selectPayMethod(method){
+  PM.payMethod = method;
+  document.getElementById('pmPay_acct').classList.toggle('selected', method==='account');
+  document.getElementById('pmPay_card').classList.toggle('selected', method==='card');
+  document.getElementById('pm_card_fields').classList.toggle('hidden', method!=='card');
+  document.querySelector('input[name="payMethod"][value="account"]').checked = method==='account';
+  document.querySelector('input[name="payMethod"][value="card"]').checked   = method==='card';
+}
+function populatePaymentStep(){
+  const total = PM._total||0;
+  const label = total===0?'Free':'$'+total.toFixed(2);
+  document.getElementById('pm_pay_total').textContent = label;
+  document.getElementById('pm_btn_pay_label').textContent = total===0?'Reserve Free Tickets':'Pay '+label;
+  document.getElementById('pm_acct_balance').textContent = '$'+PM.balance.toFixed(2);
+  document.getElementById('pm_pay_err').classList.add('hidden');
+}
+
+/* ── Card input formatters ── */
+function formatCardNum(el){
+  let v=el.value.replace(/\D/g,'').slice(0,16);
+  el.value=v.match(/.{1,4}/g)?.join(' ')||v;
+}
+function formatExpiry(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>=3) v=v.slice(0,2)+'/'+v.slice(2,4);
+  el.value=v;
+}
+
+/* ── Process payment (mock) ── */
+function processPayment(){
+  const errEl = document.getElementById('pm_pay_err');
+  errEl.classList.add('hidden');
+
+  // Validate card fields if card selected
+  if(PM.payMethod==='card'){
+    const num = document.getElementById('pm_cc_num').value.replace(/\s/g,'');
+    const exp = document.getElementById('pm_cc_exp').value;
+    const cvc = document.getElementById('pm_cc_cvc').value;
+    if(num.length<16){ showPayErr('Enter a valid 16-digit card number'); return; }
+    if(!/^\d{2}\/\d{2}$/.test(exp)){ showPayErr('Enter expiry as MM/YY'); return; }
+    if(cvc.length<3){ showPayErr('Enter a valid CVC (3-4 digits)'); return; }
+  }
+  if(PM.payMethod==='account' && PM._total > PM.balance){
+    showPayErr('Insufficient account balance ($'+PM.balance.toFixed(2)+' available)'); return;
+  }
+
+  // Simulate processing spinner
+  const btn = document.getElementById('pm_btn_pay');
+  btn.disabled=true;
+  document.getElementById('pm_btn_pay_label').textContent='Processing…';
+
+  setTimeout(()=>{
+    btn.disabled=false;
+    // Deduct balance if account pay
+    if(PM.payMethod==='account') PM.balance = parseFloat((PM.balance - PM._total).toFixed(2));
+
+    // Call Store
+    const tickets = Store.purchaseOrder(PM.eventId, PM.qty, PM.payMethod);
+    if(!tickets){
+      showPayErr('Could not complete purchase — insufficient tickets remaining');
+      document.getElementById('pm_btn_pay_label').textContent='Try Again';
+      return;
+    }
+
+    // Build confirmation step
+    buildConfirmation(tickets);
+    purchaseStep(3);
+    // Rich confirmation toast with .edu email
+    const { currentUser } = Store.getState();
+    const ev = PM._ev;
+    toastRich(
+      `🎟 Ticket${PM.qty>1?'s':''} Reserved Successfully!`,
+      `Confirmation sent to ${currentUser.email} · ${ev.title}`
+    );
+    // Refresh drawer if open
+    if(document.getElementById('ticketDrawer').classList.contains('open')) renderTicketDrawer();
+  }, 900);
+}
+function showPayErr(msg){
+  const el=document.getElementById('pm_pay_err');
+  el.textContent=msg; el.classList.remove('hidden');
+  document.getElementById('pm_btn_pay_label').textContent='Pay Now';
+  document.getElementById('pm_btn_pay').disabled=false;
+}
+
+/* ── Build styled ticket(s) in step 3 ── */
+function buildConfirmation(tickets){
+  const list = document.getElementById('pm_tickets_list');
+  list.innerHTML='';
+  tickets.forEach(t => list.appendChild(buildTicketTemplate(t)));
+}
+
+/* ── TICKET TEMPLATE COMPONENT ──
+   Returns a DOM element representing a styled, printable ticket.
+   Accepts a ticket object from the store.
+───────────────────────────────── */
+function buildTicketTemplate(t){
+  const wrapper = document.createElement('div');
+  wrapper.className='ticket-shell';
+  wrapper.dataset.ticketId = t.id;
+
+  const hdrGrad = catGradient(t.category);
+  const paidLabel = t.amountPaid===0 ? 'FREE' : '$'+t.amountPaid.toFixed(2);
+  const payLabel  = t.paymentMethod==='account' ? 'Campus Account' : 'Card';
+
+  wrapper.innerHTML=`
+    <!-- TICKET HEADER -->
+    <div class="ticket-header" style="background:${hdrGrad.replace('135deg','160deg')}">
+      <div class="flex items-start justify-between relative z-10">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-xl">${categoryEmoji(t.category)}</span>
+            <span style="font-size:.65rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.45)">${t.category}</span>
+          </div>
+          <h3 style="font-size:1.05rem;font-weight:900;color:#1f2328;line-height:1.2;max-width:260px">${esc(t.eventTitle)}</h3>
+          <p style="font-size:.75rem;color:rgba(0,0,0,.55);margin-top:4px">Organised by ${esc(t.organizer||'Campus Events')}</p>
+        </div>
+        <div style="background:rgba(255,255,255,.75);border-radius:.5rem;padding:6px 10px;text-align:right;flex-shrink:0">
+          <p style="font-size:1rem;font-weight:900;color:#7c3aed">${paidLabel}</p>
+          <p style="font-size:.6rem;color:#6b7280;font-weight:600">per ticket</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAR LINE -->
+    <div class="ticket-tear"><div class="tear-line"></div></div>
+
+    <!-- TICKET BODY -->
+    <div class="ticket-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem">
+        <div class="ticket-field">
+          <label>Date &amp; Time</label>
+          <span>${formatDate(t.date)}</span>
+        </div>
+        <div class="ticket-field">
+          <label>Venue</label>
+          <span>${esc(t.venue)}</span>
+        </div>
+        <div class="ticket-field">
+          <label>Attendee</label>
+          <span>${esc(t.studentName)}</span>
+        </div>
+        <div class="ticket-field">
+          <label>Student ID</label>
+          <span>${esc(t.studentSid)}</span>
+        </div>
+        <div class="ticket-field">
+          <label>Seat</label>
+          <span>${t.seatNum} of ${t.totalInOrder}</span>
+        </div>
+        <div class="ticket-field">
+          <label>Payment</label>
+          <span>${payLabel}</span>
+        </div>
+      </div>
+      <div class="ticket-field" style="margin-top:.25rem">
+        <label>Ticket ID / Order Ref</label>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span class="ticket-hash">${t.id}</span>
+          <span style="font-size:.68rem;color:#9ca3af">Order: ${t.orderRef}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAR LINE 2 -->
+    <div class="ticket-tear"><div class="tear-line"></div></div>
+
+    <!-- TICKET FOOTER (QR + branding) -->
+    <div class="ticket-footer">
+      <div id="qr_${t.id.replace(/[^a-z0-9]/gi,'_')}" class="qr-wrap" style="padding:6px;border-radius:6px"></div>
+      <div style="flex:1;min-width:0">
+        <p style="font-size:.7rem;color:#6b7280;line-height:1.4">Show this QR at the venue entrance. Valid for one-time scan only.</p>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:6px">
+          <div style="width:16px;height:16px;background:#7c3aed;border-radius:3px;display:flex;align-items:center;justify-content:center">
+            <svg style="width:10px;height:10px" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+          </div>
+          <span style="font-size:.7rem;font-weight:800;color:#7c3aed">CampGroove</span>
+        </div>
+      </div>
+    </div>`;
+
+  // Render QR after DOM insertion (need a tick for the ID to exist)
+  setTimeout(()=>{
+    const qrEl = document.getElementById('qr_'+t.id.replace(/[^a-z0-9]/gi,'_'));
+    if(qrEl) renderQRInto(qrEl, `${t.id}:${t.eventId}:${t.studentId}:${t.seatNum}`);
+  }, 0);
+
+  return wrapper;
+}
+
+/* ── Print tickets ── */
+function printTickets(){
+  const list = document.getElementById('pm_tickets_list');
+  const pa = document.getElementById('printArea');
+  pa.innerHTML=list.innerHTML;
+  pa.classList.remove('hidden');
+  window.print();
+  pa.classList.add('hidden');
+  pa.innerHTML='';
+}
+
+/* ── Download tickets as HTML blob ── */
+function downloadTickets(){
+  const list = document.getElementById('pm_tickets_list');
+  const styles = document.querySelector('style').outerHTML;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CampGroove Tickets</title>${styles}</head><body style="padding:2rem;background:#f3f4f6">${list.innerHTML}</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`campgroove-tickets-${Date.now()}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Tickets downloaded!','success');
+}
+
+/* ─────────────────────────────────────────────
+   QR CODE (SVG pattern, no external deps)
+───────────────────────────────────────────── */
+function renderQR(payload){
+  // Generate a deterministic pattern from the payload string
+  let hash=0;
+  for(let i=0;i<payload.length;i++) hash=(Math.imul(31,hash)+payload.charCodeAt(i))|0;
+  const size=21;
+  const cells=[];
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      // Fixed finder patterns (top-left, top-right, bottom-left)
+      const inFinder=(r<7&&c<7)||(r<7&&c>13)||(r>13&&c<7);
+      const inFinderInner=(r>=1&&r<=5&&c>=1&&c<=5&&r<7&&c<7)||
+                          (r>=1&&r<=5&&c>=15&&c<=19&&r<7)||
+                          (r>=15&&r<=19&&c>=1&&c<=5&&c<7);
+      const onFinderEdge= inFinder&&!inFinderInner;
+      let val;
+      if(onFinderEdge) val=1;
+      else if(inFinderInner&&((r===3&&c<=5)||(r<=5&&c===3)||(r===3&&c>=15&&c<=19)||(r<=5&&c===17)||(r>=15&&r<=19&&c===3)||(r===17&&c<=5))) val=0;
+      else if(inFinder) val=1;
+      else {
+        // Data cells — pseudo-random from hash + position
+        val=((hash^(r*size+c)*2654435761)>>>16)&1;
+      }
+      cells.push(val);
+    }
+  }
+  const cellPx=6;
+  const total=size*cellPx+8;
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="0 0 ${total} ${total}">`;
+  svg+=`<rect width="${total}" height="${total}" fill="white"/>`;
+  cells.forEach((v,i)=>{
+    if(v){
+      const r=Math.floor(i/size), c=i%size;
+      svg+=`<rect x="${4+c*cellPx}" y="${4+r*cellPx}" width="${cellPx}" height="${cellPx}" fill="#1a1a1a"/>`;
+    }
+  });
+  svg+='</svg>';
+  document.getElementById('qrDisplay').innerHTML=svg;
+}
+/* renderQRInto — render QR into any container element (used by ticket template) */
+function renderQRInto(container, payload){
+  let hash=0;
+  for(let i=0;i<payload.length;i++) hash=(Math.imul(31,hash)+payload.charCodeAt(i))|0;
+  const size=21, cellPx=5;
+  const total=size*cellPx+6;
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="0 0 ${total} ${total}">`;
+  svg+=`<rect width="${total}" height="${total}" fill="white"/>`;
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const inFinder=(r<7&&c<7)||(r<7&&c>13)||(r>13&&c<7);
+      const inFinderInner=(r>=1&&r<=5&&c>=1&&c<=5&&r<7&&c<7)||(r>=1&&r<=5&&c>=15&&c<=19&&r<7)||(r>=15&&r<=19&&c>=1&&c<=5&&c<7);
+      const onEdge=inFinder&&!inFinderInner;
+      let val;
+      if(onEdge) val=1;
+      else if(inFinderInner&&((r===3&&c<=5)||(r<=5&&c===3)||(r===3&&c>=15&&c<=19)||(r<=5&&c===17)||(r>=15&&r<=19&&c===3)||(r===17&&c<=5))) val=0;
+      else if(inFinder) val=1;
+      else val=((hash^(r*size+c)*2654435761)>>>16)&1;
+      if(val) svg+=`<rect x="${3+c*cellPx}" y="${3+r*cellPx}" width="${cellPx}" height="${cellPx}" fill="#1a1a1a"/>`;
+    }
+  }
+  svg+='</svg>';
+  container.innerHTML=svg;
+}
+
+/* ─────────────────────────────────────────────
+   EVENT CARD RENDERER
+───────────────────────────────────────────── */
+function renderEventCard(ev, opts={}){
+  const soldOut = ev.ticketsRemaining===0;
+  const pct = Math.round(((ev.capacity-ev.ticketsRemaining)/ev.capacity)*100);
+  const isMine = opts.isOrganizer;
+  const { currentUser, tickets } = Store.getState();
+  const myTickets = currentUser ? tickets.filter(t=>t.eventId===ev.id&&t.studentId===currentUser.id&&t.status==='reserved') : [];
+  const alreadyBought = myTickets.length > 0;
+  const heldQty = myTickets.length;
+  const card = document.createElement('div');
+  card.className='bg-white rounded-2xl border border-gray-100 card-hover overflow-hidden fade-in flex flex-col';
+  card.innerHTML=`
+    <!-- Cover banner -->
+    <div class="h-28 flex items-center justify-center text-4xl relative" style="background:${catGradient(ev.category)}">
+      <span>${categoryEmoji(ev.category)}</span>
+      <span class="absolute top-2 right-2 tag tag-${ev.category}">${ev.category}</span>
+      ${ev.status==='cancelled'?'<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><span class="text-white font-black text-sm tracking-widest uppercase">Cancelled</span></div>':''}
+    </div>
+    <!-- Body -->
+    <div class="p-4 flex flex-col flex-1 gap-2">
+      <h3 class="font-black text-gray-900 text-base leading-snug line-clamp-2">${esc(ev.title)}</h3>
+      <p class="text-xs text-gray-400 flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        ${formatDate(ev.date)}
+      </p>
+      <p class="text-xs text-gray-400 flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        ${esc(ev.venue)}
+      </p>
+      <p class="text-xs text-gray-500 line-clamp-2 flex-1">${esc(ev.description)}</p>
+      <!-- Capacity bar -->
+      <div>
+        <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+          <span>${ev.capacity-ev.ticketsRemaining} sold</span>
+          <span>${ev.ticketsRemaining} left</span>
+        </div>
+        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full ${pct>85?'bg-red-400':pct>50?'bg-amber-400':'bg-green-400'} transition-all" style="width:${pct}%"></div>
+        </div>
+      </div>
+      <!-- Price + Action -->
+      <div class="flex items-center justify-between mt-1 pt-2 border-t border-gray-50">
+        <span class="font-black text-brand text-base">${ev.price===0?'<span class="tag" style="background:#ecfdf5;color:#047857">FREE</span>':'$'+Number(ev.price).toFixed(2)}</span>
+        ${isMine
+          ? `<div class="flex gap-1.5">
+               <button onclick="adminCancelEvent('${ev.id}')" class="btn-warn btn-sm">${ev.status==='cancelled'?'Cancelled':'Cancel'}</button>
+               <button onclick="adminDeleteEvent('${ev.id}')" class="btn-danger btn-sm">Delete</button>
+             </div>`
+          : ev.status==='cancelled'
+            ? `<span class="text-xs font-bold text-red-400">Cancelled</span>`
+            : soldOut && !alreadyBought
+              ? `<span class="text-xs font-bold text-gray-400">Sold Out</span>`
+              : alreadyBought && heldQty>=5
+                ? `<span class="text-xs font-bold text-green-600">✓ ${heldQty} Reserved</span>`
+                : `<button onclick="openPurchaseModal('${ev.id}')" class="btn-primary btn-sm flex items-center gap-1">
+                    🎟 ${alreadyBought?'Add More':'Get Ticket'}
+                   </button>`
+        }
+      </div>
+    </div>`;
+  return card;
+}
+
+function catGradient(cat){
+  const m={music:'linear-gradient(135deg,#fce7f3,#f9a8d4)',sports:'linear-gradient(135deg,#dcfce7,#86efac)',academic:'linear-gradient(135deg,#dbeafe,#93c5fd)',arts:'linear-gradient(135deg,#fef9c3,#fde047)',tech:'linear-gradient(135deg,#ede9fe,#c4b5fd)',social:'linear-gradient(135deg,#ffedd5,#fdba74)'};
+  return m[cat]||'linear-gradient(135deg,#f3f4f6,#e5e7eb)';
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+/* ─────────────────────────────────────────────
+   RENDER EVENTS GRID
+───────────────────────────────────────────── */
+function renderEventsGrid(){
+  const { events } = Store.getState();
+  const search = document.getElementById('searchInput')?.value.toLowerCase()||'';
+  const cat    = document.getElementById('catFilter')?.value||'';
+  const filtered = events.filter(ev=>{
+    if(ev.status!=='published') return false;
+    if(cat && ev.category!==cat) return false;
+    if(search && !ev.title.toLowerCase().includes(search) && !ev.venue.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const grid = document.getElementById('eventGrid');
+  const noEl = document.getElementById('noEvents');
+  grid.innerHTML='';
+  if(!filtered.length){ noEl.classList.remove('hidden'); return; }
+  noEl.classList.add('hidden');
+  filtered.forEach(ev=>grid.appendChild(renderEventCard(ev)));
+}
+function filterEvents(){ renderEventsGrid(); }
+
+/* ─────────────────────────────────────────────
+   RENDER MY TICKETS
+───────────────────────────────────────────── */
+function renderMyTickets(){
+  const { tickets, currentUser } = Store.getState();
+  const mine = tickets.filter(t=>t.studentId===currentUser?.id);
+  const grid = document.getElementById('myTicketsGrid');
+  const noEl = document.getElementById('noTickets');
+  grid.innerHTML='';
+  if(!mine.length){ noEl.classList.remove('hidden'); return; }
+  noEl.classList.add('hidden');
+  mine.forEach(t=>{
+    const card = document.createElement('div');
+    card.className='bg-white rounded-2xl border border-gray-100 overflow-hidden fade-in';
+    card.innerHTML=`
+      <div class="h-16 flex items-center px-5 gap-3" style="background:${catGradient(t.category)}">
+        <span class="text-2xl">${categoryEmoji(t.category)}</span>
+        <div>
+          <p class="font-black text-gray-900 text-sm leading-tight">${esc(t.eventTitle)}</p>
+          <span class="pill ${t.status==='reserved'?'status-published':'status-cancelled'}">${t.status}</span>
+        </div>
+      </div>
+      <div class="p-4 space-y-2 text-xs text-gray-500">
+        <p>📅 ${formatDate(t.date)}</p>
+        <p>📍 ${esc(t.venue)}</p>
+        <p class="font-bold text-gray-700">Ticket ID: <span class="font-mono text-brand">${t.id}</span></p>
+        <p>Amount: <strong>${formatPrice(t.amountPaid)}</strong></p>
+        <button onclick="showQR('${t.id}:${t.eventId}:${t.studentId}','${esc(t.eventTitle)}, ${formatDate(t.date).replace(/'/g,"")}')"
+          class="btn-secondary w-full mt-2 text-xs">View QR Code</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function showQR(payload, label){
+  document.getElementById('ticketConfirmMsg').textContent = label;
+  renderQR(payload);
+  openModal('ticketModal');
+}
+
+/* ═════════════════════════════════════════════════
+   MY TICKETS SLIDE-OVER DRAWER
+═════════════════════════════════════════════════ */
+
+// Active filter state
+let _drawerFilter = 'all';
+
+function openTicketDrawer(){
+  const { currentUser } = Store.getState();
+  if(!currentUser){ toast('Sign in to view your tickets','error'); openAuthModal('login'); return; }
+  renderTicketDrawer();
+  document.getElementById('ticketDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTicketDrawer(){
+  document.getElementById('ticketDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function filterDrawer(filter, btn){
+  _drawerFilter = filter;
+  // Update active tab
+  document.querySelectorAll('#drawerFilters button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTicketDrawer();
+}
+
+/* Build the QR payload: studentId:eventId:purchaseTimestamp (ISO) */
+function drawerQRPayload(t){
+  const ts = t.createdAt || new Date().toISOString();
+  return `${t.studentId}:${t.eventId}:${ts}`;
+}
+
+function renderTicketDrawer(){
+  const { tickets, currentUser } = Store.getState();
+  if(!currentUser) return;
+
+  let mine = tickets.filter(t => t.studentId === currentUser.id);
+
+  // Apply filter
+  if(_drawerFilter === 'reserved' || _drawerFilter === 'voided'){
+    mine = mine.filter(t => t.status === _drawerFilter);
+  } else if(_drawerFilter !== 'all'){
+    // category filter
+    mine = mine.filter(t => t.category === _drawerFilter);
+  }
+
+  // Update subtitle + count
+  const total = tickets.filter(t => t.studentId === currentUser.id).length;
+  const active = tickets.filter(t => t.studentId === currentUser.id && t.status === 'reserved').length;
+  document.getElementById('drawerSubtitle').textContent =
+    `${active} active · ${total} total`;
+  document.getElementById('drawerTicketCount').textContent = mine.length;
+
+  const list  = document.getElementById('drawerTicketList');
+  const empty = document.getElementById('drawerEmpty');
+  list.innerHTML = '';
+
+  if(!mine.length){
+    list.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
+  }
+  list.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  // Sort newest first
+  const sorted = [...mine].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  sorted.forEach(t => {
+    const card = document.createElement('div');
+    card.className = `dtk-card${t.status==='voided'?' voided':''} fade-in`;
+
+    const isActive   = t.status === 'reserved';
+    const paidLabel  = t.amountPaid === 0 ? 'Free' : '$' + Number(t.amountPaid).toFixed(2);
+    const payIcon    = t.paymentMethod === 'card' ? '💳' : '🏦';
+    const statusCls  = isActive ? 'status-published' : 'status-cancelled';
+    const qrPayload  = drawerQRPayload(t);
+    const qrElId     = 'dqr_' + t.id.replace(/[^a-z0-9]/gi,'_');
+    const purchasedAt = t.createdAt ? new Date(t.createdAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+
+    card.innerHTML = `
+      <!-- Card Header: category gradient + emoji + title -->
+      <div class="dtk-header" style="background:${catGradient(t.category)}">
+        <span class="text-2xl flex-shrink-0">${categoryEmoji(t.category)}</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-black text-gray-900 text-sm leading-tight truncate">${esc(t.eventTitle)}</p>
+          <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <span class="tag tag-${t.category}">${t.category}</span>
+            <span class="pill ${statusCls} text-[10px] py-0">${t.status}</span>
+          </div>
+        </div>
+        <!-- QR code (encoded: studentId:eventId:purchaseTimestamp) -->
+        <div class="dtk-qr flex-shrink-0" id="${qrElId}"></div>
+      </div>
+
+      <!-- Card Body: event meta + ticket details -->
+      <div class="dtk-body">
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Date</p>
+            <p class="text-gray-700 font-medium">${formatDate(t.date)}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Venue</p>
+            <p class="text-gray-700 font-medium truncate">${esc(t.venue)}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Ticket ID</p>
+            <p class="font-mono text-[11px] text-brand font-bold">${t.id}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Order</p>
+            <p class="font-mono text-[11px] text-gray-600">${t.orderRef||'—'}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Paid</p>
+            <p class="font-semibold text-gray-800">${payIcon} ${paidLabel}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Purchased</p>
+            <p class="text-gray-600">${purchasedAt}</p>
+          </div>
+        </div>
+        <!-- QR Payload info (for transparency) -->
+        <div class="mt-2 pt-2 border-t border-gray-50">
+          <p class="text-[9px] text-gray-300 font-mono break-all leading-tight">QR: ${qrPayload.slice(0,52)}…</p>
+        </div>
+      </div>`;
+
+    list.appendChild(card);
+
+    // Render QR after card is in DOM
+    setTimeout(() => {
+      const qrEl = document.getElementById(qrElId);
+      if(qrEl) renderQRInto(qrEl, qrPayload);
+    }, 0);
+  });
+}
+
+/* Update ticket badge in nav */
+function updateTicketBadge(){
+  const { tickets, currentUser } = Store.getState();
+  if(!currentUser) return;
+  const count = tickets.filter(t => t.studentId === currentUser.id && t.status === 'reserved').length;
+  const badge = document.getElementById('ticketNavBadge');
+  if(!badge) return;
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
+/* ─────────────────────────────────────────────
+   RENDER ORGANIZER EVENTS
+───────────────────────────────────────────── */
+function renderOrgEvents(){
+  const { events, currentUser } = Store.getState();
+  const mine = events.filter(ev=>ev.organizer===currentUser?.id);
+  const grid = document.getElementById('orgEventsGrid');
+  const noEl = document.getElementById('noOrgEvents');
+  grid.innerHTML='';
+  if(!mine.length){ noEl.classList.remove('hidden'); return; }
+  noEl.classList.add('hidden');
+  mine.forEach(ev=>grid.appendChild(renderEventCard(ev,{isOrganizer:true})));
+}
+function adminCancelEvent(id){ Store.cancelEvent(id); toast('Event cancelled','info'); }
+function adminDeleteEvent(id){ if(!confirm('Delete this event?')) return; Store.deleteEvent(id); toast('Event deleted','info'); }
+
+/* ─────────────────────────────────────────────
+   SECTION SWITCHER
+───────────────────────────────────────────── */
+function showSection(name){
+  document.getElementById('eventsSection').classList.toggle('hidden', name!=='events');
+  document.getElementById('myTicketsSection').classList.toggle('hidden', name!=='mytickets');
+  document.getElementById('organizerSection').classList.toggle('hidden', name!=='organizer');
+  // Update nav active state
+  document.querySelectorAll('.nav-link').forEach(el=>{
+    el.classList.remove('active');
+    if((name==='events'&&el.textContent.includes('Events')) ||
+       (name==='mytickets'&&el.textContent.includes('Tickets')) ||
+       (name==='organizer'&&el.textContent.includes('Events')&&el.id))
+      el.classList.add('active');
+  });
+  if(name==='mytickets') renderMyTickets();
+  if(name==='organizer') renderOrgEvents();
+  if(name==='events') renderEventsGrid();
+}
+function scrollToTop(){ window.scrollTo({top:0,behavior:'smooth'}); showSection('events'); }
+
+/* ─────────────────────────────────────────────
+   NOTIFICATIONS
+───────────────────────────────────────────── */
+function toggleNotifDropdown(){
+  const d = document.getElementById('notifDropdown');
+  d.classList.toggle('hidden');
+  closeUserMenu();
+}
+function updateNotifUI(){
+  const { notifications, currentUser } = Store.getState();
+  if(!currentUser) return;
+  const mine = notifications.filter(n=>n.userId===currentUser.id);
+  const unread = mine.filter(n=>!n.read).length;
+  const badge = document.getElementById('notifBadge');
+  badge.textContent=unread;
+  badge.classList.toggle('hidden', unread===0);
+  const list = document.getElementById('notifList');
+  const emptyEl = document.getElementById('notifEmpty');
+  list.innerHTML='';
+  if(!mine.length){ emptyEl.classList.remove('hidden'); return; }
+  emptyEl.classList.add('hidden');
+  mine.slice(0,10).forEach(n=>{
+    const li=document.createElement('li');
+    li.className=`px-4 py-3 flex gap-2 items-start cursor-pointer hover:bg-gray-50 ${n.read?'opacity-60':''}`;
+    li.onclick=()=>{ Store.markNotifRead(n.id); };
+    li.innerHTML=`<span class="text-base mt-0.5">${n.type==='success'?'✅':n.type==='warning'?'⚠️':'ℹ️'}</span>
+      <div><p class="text-sm text-gray-700">${esc(n.message)}</p>
+      <p class="text-[10px] text-gray-400 mt-0.5">${new Date(n.ts).toLocaleTimeString()}</p></div>`;
+    list.appendChild(li);
+  });
+}
+function markAllRead(e){ e.stopPropagation(); Store.markAllNotifsRead(); }
+
+/* ─────────────────────────────────────────────
+   USER MENU
+───────────────────────────────────────────── */
+function toggleUserMenu(){
+  const m = document.getElementById('userMenu');
+  m.classList.toggle('hidden');
+  document.getElementById('notifDropdown').classList.add('hidden');
+}
+function closeUserMenu(){ document.getElementById('userMenu').classList.add('hidden'); }
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#userChip')&&!e.target.closest('#userMenu'))
+    document.getElementById('userMenu').classList.add('hidden');
+  if(!e.target.closest('#navNotifBell'))
+    document.getElementById('notifDropdown').classList.add('hidden');
+});
+function toggleMobileMenu(){
+  document.getElementById('mobileMenu').classList.toggle('hidden');
+}
+
+/* ─────────────────────────────────────────────
+   UPDATE UI ON STATE CHANGE
+───────────────────────────────────────────── */
+function updateNav(state){
+  const { currentUser, events, tickets, users } = state;
+  const loggedIn = !!currentUser;
+  // Buttons
+  document.getElementById('btnSignIn').classList.toggle('hidden', loggedIn);
+  document.getElementById('btnRegisterNav').classList.toggle('hidden', loggedIn);
+  document.getElementById('userChip').classList.toggle('hidden', !loggedIn);
+  document.getElementById('userChip').style.display = loggedIn?'flex':'none';
+  document.getElementById('navNotifBell').classList.toggle('hidden', !loggedIn);
+  document.getElementById('mobSignIn').classList.toggle('hidden', loggedIn);
+  document.getElementById('mobRegister').classList.toggle('hidden', loggedIn);
+  // Hero register button
+  document.getElementById('heroRegBtn').classList.toggle('hidden', loggedIn);
+  // User chip
+  if(loggedIn){
+    document.getElementById('userAvatar').textContent = currentUser.name[0].toUpperCase();
+    document.getElementById('userNameDisplay').textContent = currentUser.name.split(' ')[0];
+    document.getElementById('userMenuName').textContent  = currentUser.name;
+    document.getElementById('userMenuEmail').textContent = currentUser.email;
+    const rb = document.getElementById('userMenuRoleBadge');
+    rb.className=`tag ${roleTagClass(currentUser.role)}`;
+    rb.textContent=currentUser.role;
+    // Role-conditional nav links
+    const isStudent   = currentUser.role==='student';
+    const isOrg       = currentUser.role==='organizer';
+    const isAdmin     = currentUser.role==='admin';
+    const canHaveTickets = isStudent || isOrg;
+    setVisible('navOrganizer',   isOrg||isAdmin);
+    setVisible('navAdmin',       isAdmin);
+    setVisible('mobMyTickets',   canHaveTickets);
+    setVisible('mobOrganizer',   isOrg||isAdmin);
+    setVisible('mobAdmin',       isAdmin);
+    setVisible('menuMyTickets',  canHaveTickets);
+    setVisible('menuOrganizer',  isOrg||isAdmin);
+    setVisible('menuAdmin',      isAdmin);
+    // Ticket drawer icon button
+    const tBtn = document.getElementById('navTicketBtn');
+    if(tBtn) tBtn.classList.toggle('hidden', !canHaveTickets);
+  } else {
+    ['navOrganizer','navAdmin','mobMyTickets','mobOrganizer','mobAdmin',
+     'menuMyTickets','menuOrganizer','menuAdmin'].forEach(id=>setVisible(id,false));
+    const tBtn = document.getElementById('navTicketBtn');
+    if(tBtn) tBtn.classList.add('hidden');
+    // Close drawer if open on logout
+    closeTicketDrawer();
+  }
+  // Hero stats
+  const pubEvents = events.filter(e=>e.status==='published').length;
+  const totalTickets = tickets.filter(t=>t.status==='reserved').length;
+  animateCount('heroEventCount', pubEvents);
+  animateCount('heroStudentCount', users.filter(u=>u.role==='student').length);
+  animateCount('heroTicketCount', totalTickets);
+  // Re-render current visible section
+  if(!document.getElementById('eventsSection').classList.contains('hidden')) renderEventsGrid();
+  if(!document.getElementById('organizerSection').classList.contains('hidden')) renderOrgEvents();
+  // Refresh drawer if open
+  if(document.getElementById('ticketDrawer').classList.contains('open')) renderTicketDrawer();
+  updateNotifUI();
+  updateTicketBadge();
+}
+
+function setVisible(id, v){
+  const el=document.getElementById(id);
+  if(el) el.style.display=v?'':'none';
+}
+function roleTagClass(r){
+  return r==='admin'?'tag-music':r==='organizer'?'tag-tech':'tag-academic';
+}
+function animateCount(id, target){
+  const el=document.getElementById(id);
+  if(!el) return;
+  let cur=parseInt(el.textContent)||0;
+  if(cur===target) return;
+  const step=Math.max(1,Math.ceil(Math.abs(target-cur)/15));
+  const dir=target>cur?1:-1;
+  const iv=setInterval(()=>{
+    cur+=dir*step;
+    if((dir>0&&cur>=target)||(dir<0&&cur<=target)){ cur=target; clearInterval(iv); }
+    el.textContent=cur;
+  },40);
+}
+
+/* ─────────────────────────────────────────────
+   ADMIN DASHBOARD REFRESH
+───────────────────────────────────────────── */
+function switchAdminTab(tab){
+  ['events','users','tickets','audit'].forEach(t=>{
+    document.getElementById(`admPanel_${t}`).classList.toggle('hidden', t!==tab);
+    const btn=document.getElementById(`admTab_${t}`);
+    if(btn) btn.classList.toggle('active', t===tab);
+  });
+  if(tab==='events')  renderAdminEvents();
+  if(tab==='users')   renderAdminUsers();
+  if(tab==='tickets') renderAdminTickets();
+  if(tab==='audit')   renderAuditLog();
+}
+
+function refreshAdminDashboard(){
+  const { events, users, tickets } = Store.getState();
+  const pubEvents = events.filter(e=>e.status==='published').length;
+  const soldTickets = tickets.filter(t=>t.status==='reserved');
+  const revenue = soldTickets.reduce((s,t)=>s+t.amountPaid,0);
+  document.getElementById('adm_total_users').textContent   = users.length;
+  document.getElementById('adm_total_events').textContent  = pubEvents;
+  document.getElementById('adm_total_tickets').textContent = soldTickets.length;
+  document.getElementById('adm_revenue').textContent       = '$'+revenue.toFixed(2);
+  switchAdminTab('events');
+}
+
+function renderAdminEvents(){
+  const { events } = Store.getState();
+  const tbody = document.getElementById('admEventsBody');
+  tbody.innerHTML='';
+  events.forEach(ev=>{
+    const sold = ev.capacity - ev.ticketsRemaining;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="font-semibold text-gray-800">${esc(ev.title)}</td>
+      <td><span class="tag tag-${ev.category}">${ev.category}</span></td>
+      <td class="text-gray-500">${esc(ev.organizerName)}</td>
+      <td class="text-gray-500 whitespace-nowrap">${new Date(ev.date).toLocaleDateString()}</td>
+      <td>${ev.capacity}</td>
+      <td><span class="${sold>0?'font-bold text-green-600':'text-gray-400'}">${sold}</span></td>
+      <td><span class="pill ${ev.status==='published'?'status-published':ev.status==='cancelled'?'status-cancelled':'status-draft'}">${ev.status}</span></td>
+      <td>
+        <div class="flex gap-1.5">
+          ${ev.status!=='cancelled'?`<button class="btn-warn btn-sm" onclick="admCancelEvent('${ev.id}')">Cancel</button>`:''}
+          <button class="btn-danger btn-sm" onclick="admDeleteEvent('${ev.id}')">Delete</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+function admCancelEvent(id){ Store.cancelEvent(id); refreshAdminDashboard(); toast('Event cancelled by admin','info'); }
+function admDeleteEvent(id){ if(!confirm('Permanently delete this event?')) return; Store.deleteEvent(id); refreshAdminDashboard(); toast('Event deleted','info'); }
+
+function renderAdminUsers(){
+  const { users, currentUser } = Store.getState();
+  const tbody = document.getElementById('admUsersBody');
+  tbody.innerHTML='';
+  users.forEach(u=>{
+    const isSelf = u.id===currentUser?.id;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="font-semibold text-gray-800">${esc(u.name)}</td>
+      <td class="text-gray-500 text-xs">${esc(u.email)}</td>
+      <td class="font-mono text-xs text-gray-500">${esc(u.sid)}</td>
+      <td>
+        <select class="input-base !py-1 !text-xs !w-28" onchange="admChangeRole('${u.id}',this.value)" ${isSelf?'disabled':''}>
+          <option value="student"   ${u.role==='student'  ?'selected':''}>student</option>
+          <option value="organizer" ${u.role==='organizer'?'selected':''}>organizer</option>
+          <option value="admin"     ${u.role==='admin'    ?'selected':''}>admin</option>
+        </select>
+      </td>
+      <td><span class="pill ${u.isActive?'status-published':'status-cancelled'}">${u.isActive?'active':'inactive'}</span></td>
+      <td>
+        <button class="btn-${u.isActive?'warn':'secondary'} btn-sm" onclick="admToggleUser('${u.id}')" ${isSelf?'disabled':''}>
+          ${u.isActive?'Deactivate':'Reactivate'}
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+function admChangeRole(uid, role){ Store.changeRole(uid, role); renderAdminUsers(); toast('Role updated','success'); }
+function admToggleUser(uid){ Store.deactivateUser(uid); renderAdminUsers(); toast('User status updated','info'); }
+
+function renderAdminTickets(){
+  const { tickets } = Store.getState();
+  const tbody = document.getElementById('admTicketsBody');
+  tbody.innerHTML='';
+  if(!tickets.length){ tbody.innerHTML='<tr><td colspan="6" class="text-center text-gray-400 py-8">No tickets yet</td></tr>'; return; }
+  tickets.forEach(t=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="font-mono text-xs text-brand font-bold">${t.id}</td>
+      <td class="font-semibold text-gray-700">${esc(t.studentName)}</td>
+      <td class="text-gray-500">${esc(t.eventTitle)}</td>
+      <td class="font-semibold">${formatPrice(t.amountPaid)}</td>
+      <td><span class="pill ${t.status==='reserved'?'status-published':'status-cancelled'}">${t.status}</span></td>
+      <td>
+        ${t.status==='reserved'?`<button class="btn-danger btn-sm" onclick="admVoidTicket('${t.id}')">Void</button>`:'<span class="text-xs text-gray-400">—</span>'}
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+function admVoidTicket(id){ if(!confirm('Void this ticket?')) return; Store.voidTicket(id); renderAdminTickets(); refreshAdminDashboard(); toast('Ticket voided','info'); }
+
+function renderAuditLog(){
+  const { auditLog } = Store.getState();
+  const list = document.getElementById('auditLogList');
+  list.innerHTML='';
+  auditLog.forEach(entry=>{
+    const li=document.createElement('li');
+    li.className='px-4 py-2.5 flex items-start gap-3';
+    li.innerHTML=`
+      <span class="text-[10px] font-mono text-gray-400 mt-0.5 flex-shrink-0 w-32">${entry.ts}</span>
+      <span class="text-xs text-gray-500 flex-shrink-0 font-semibold w-28 truncate">${esc(entry.actor)}</span>
+      <span class="text-xs text-gray-700">${esc(entry.action)}</span>`;
+    list.appendChild(li);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   SUBSCRIBE STATE → UI
+───────────────────────────────────────────── */
+Store.subscribe(updateNav);
+
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Set min datetime to now
+  const dtEl = document.getElementById('ev_date');
+  if(dtEl) dtEl.min = new Date().toISOString().slice(0,16);
+  // Initial render
+  updateNav(Store.getState());
+  renderEventsGrid();
+});
+</script>
+</body>
+</html>
